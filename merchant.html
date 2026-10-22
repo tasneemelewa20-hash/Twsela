@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>توصيلة — Merchant Portal</title>
+<link rel="stylesheet" href="portal.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.4.0/dist/tabler-icons.min.css">
+<style>
+.plan-bar{display:flex;align-items:center;gap:8px;margin-top:10px;font-size:12px}
+.plan-bar .prog{flex:1}
+.api-key-row{display:flex;align-items:center;gap:8px;background:var(--surf2);border:1px solid var(--bdr2);border-radius:var(--r-sm);padding:8px 12px;margin-bottom:8px;font-size:12px}
+.api-key-val{flex:1;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--blue);letter-spacing:.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.webhook-row{display:flex;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid var(--bdr);font-size:12.5px}
+.webhook-row:last-child{border-bottom:none}
+.webhook-url{flex:1;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.wallet-card{background:linear-gradient(135deg,var(--navy),var(--blue));border-radius:var(--r-lg);padding:22px 24px;color:#fff;position:relative;overflow:hidden}
+.wallet-card::after{content:'';position:absolute;top:-40px;left:-40px;width:200px;height:200px;background:rgba(255,255,255,.04);border-radius:50%}
+.wallet-amount{font-size:36px;font-weight:700;margin:8px 0}
+.wallet-sub{font-size:12px;opacity:.6}
+.tx-row{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--bdr);font-size:12.5px}
+.tx-row:last-child{border-bottom:none}
+.tx-icon{width:32px;height:32px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+.tx-desc{flex:1}
+.tx-amount{font-weight:600}
+.integration-card{background:var(--surf2);border:1px solid var(--bdr);border-radius:var(--r-sm);padding:14px 16px;display:flex;align-items:center;gap:12px;transition:all .15s;cursor:pointer}
+.integration-card:hover{border-color:var(--bdr2);box-shadow:var(--sh-sm)}
+.integration-logo{width:40px;height:40px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+.integration-name{font-size:13px;font-weight:600;margin-bottom:2px}
+.integration-meta{font-size:11px;color:var(--text3)}
+.upload-zone{border:2px dashed var(--bdr2);border-radius:var(--r);padding:30px;text-align:center;cursor:pointer;transition:all .15s;background:var(--surf2)}
+.upload-zone:hover{border-color:var(--blue2);background:#f0f5fb}
+.upload-zone i{font-size:36px;color:var(--text3);margin-bottom:8px;display:block}
+.ticket-row{display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid var(--bdr);font-size:12.5px}
+.ticket-row:last-child{border-bottom:none}
+.ticket-icon{width:30px;height:30px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;margin-top:1px}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- ══ SIDEBAR ══ -->
+<aside class="sidebar">
+  <div class="sb-logo">
+    <div class="sb-logo-icon">ت</div>
+    <div><div class="sb-logo-name">توصيلة</div><div class="sb-logo-sub">Merchant Portal</div></div>
+  </div>
+  <div class="sb-portal-badge">
+    <i class="ti ti-building-store" style="color:var(--teal);font-size:18px"></i>
+    <div><div class="sb-portal-badge-name">متجر الأناقة</div><div class="sb-portal-badge-role">Merchant · Enterprise</div></div>
+    <div class="sb-portal-dot"></div>
+  </div>
+  <nav class="sb-nav">
+    <div class="nav-grp">الرئيسية</div>
+    <button class="nav-item active" onclick="showView('overview',this)"><i class="ti ti-home"></i>الرئيسية</button>
+    <div class="nav-grp">الشحنات</div>
+    <button class="nav-item" onclick="showView('create',this)"><i class="ti ti-plus"></i>إنشاء شحنة</button>
+    <button class="nav-item" onclick="showView('bulk',this)"><i class="ti ti-upload"></i>رفع CSV</button>
+    <button class="nav-item" onclick="showView('shipments',this)"><i class="ti ti-package"></i>شحناتي<span class="nav-bdg bdg-amber">4</span></button>
+    <button class="nav-item" onclick="showView('tracking',this)"><i class="ti ti-map-pin"></i>تتبع شحنة</button>
+    <div class="nav-grp">المالية</div>
+    <button class="nav-item" onclick="showView('wallet',this)"><i class="ti ti-wallet"></i>المحفظة<span class="nav-bdg bdg-teal">+</span></button>
+    <button class="nav-item" onclick="showView('invoices',this)"><i class="ti ti-file-invoice"></i>الفواتير</button>
+    <button class="nav-item" onclick="showView('payout',this)"><i class="ti ti-building-bank"></i>طلب سحب</button>
+    <div class="nav-grp">التكاملات</div>
+    <button class="nav-item" onclick="showView('integrations',this)"><i class="ti ti-plug"></i>التكاملات</button>
+    <button class="nav-item" onclick="showView('apikeys',this)"><i class="ti ti-key"></i>API Keys</button>
+    <button class="nav-item" onclick="showView('webhooks',this)"><i class="ti ti-webhook"></i>Webhooks</button>
+    <div class="nav-grp">الدعم</div>
+    <button class="nav-item" onclick="showView('tickets',this)"><i class="ti ti-headset"></i>التذاكر<span class="nav-bdg bdg-red">1</span></button>
+    <button class="nav-item" onclick="showView('settings',this)"><i class="ti ti-settings"></i>الإعدادات</button>
+  </nav>
+  <div class="sb-footer">
+    <div class="user-row">
+      <div class="avatar" style="background:var(--teal2)">MA</div>
+      <div><div class="user-name">متجر الأناقة</div><div class="user-meta">Enterprise Plan · نشط</div></div>
+      <i class="ti ti-logout"></i>
+    </div>
+  </div>
+</aside>
+
+<!-- ══ MAIN ══ -->
+<div class="main">
+  <div class="topbar">
+    <div class="tb-page-info">
+      <div class="tb-title" id="tb-title">الرئيسية — Merchant Portal</div>
+      <div class="tb-sub">مرحبًا، متجر الأناقة 👋 · الأحد، 18 مايو 2025</div>
+    </div>
+    <div class="tb-search"><i class="ti ti-search"></i><input type="text" placeholder="بحث برقم التتبع…"></div>
+    <button class="tb-btn" onclick="toast('لا إشعارات جديدة','info')"><i class="ti ti-bell"></i><div class="notif-dot"></div></button>
+    <button class="tb-btn tb-btn-teal" onclick="showView('create',null);setActive('create')"><i class="ti ti-plus"></i>شحنة جديدة</button>
+    <a href="index.html" class="tb-btn" style="text-decoration:none"><i class="ti ti-home"></i></a>
+  </div>
+
+  <div class="content">
+
+    <!-- ════ OVERVIEW ════ -->
+    <div id="view-overview" class="page-view">
+      <div class="hero-strip">
+        <div class="hero-ico"><i class="ti ti-building-store"></i></div>
+        <div>
+          <h2>مرحبًا، متجر الأناقة 👋</h2>
+          <p>لديك 4 شحنات تنتظر المعالجة · رصيد المحفظة: <b style="color:var(--teal)">12,400 EGP</b></p>
+        </div>
+        <div class="hero-actions">
+          <button class="hbtn hbtn-ghost" onclick="showView('bulk',null);setActive('bulk')"><i class="ti ti-upload"></i>رفع CSV</button>
+          <button class="hbtn hbtn-prim" onclick="showView('create',null);setActive('create')"><i class="ti ti-plus"></i>شحنة جديدة</button>
+        </div>
+      </div>
+
+      <div class="g4" style="margin-bottom:16px">
+        <div class="kpi"><i class="ti ti-package"></i><div class="kpi-val">248</div><div class="kpi-lbl">إجمالي الشحنات</div></div>
+        <div class="kpi"><i class="ti ti-circle-check"></i><div class="kpi-val" style="color:var(--teal2)">94.2%</div><div class="kpi-lbl">نسبة التسليم</div></div>
+        <div class="kpi"><i class="ti ti-wallet"></i><div class="kpi-val">12,400</div><div class="kpi-lbl">رصيد EGP</div></div>
+        <div class="kpi"><i class="ti ti-clock"></i><div class="kpi-val" style="color:var(--gold)">4</div><div class="kpi-lbl">بانتظار المعالجة</div></div>
+      </div>
+
+      <div class="g2">
+        <div class="card">
+          <div class="card-hd"><span class="card-title">آخر شحناتي</span><button class="card-act" onclick="showView('shipments',null);setActive('shipments')">عرض الكل</button></div>
+          <table class="tbl">
+            <thead><tr><th>التتبع</th><th>المستلم</th><th>COD</th><th>الحالة</th><th>التاريخ</th></tr></thead>
+            <tbody>
+              <tr><td class="tbl-mono">TW-8801</td><td>منى رضا</td><td>350 EGP</td><td><span class="chip chip-green">مُسلَّم</span></td><td>اليوم</td></tr>
+              <tr><td class="tbl-mono">TW-8802</td><td>سيف عمر</td><td>180 EGP</td><td><span class="chip chip-blue">في الطريق</span></td><td>اليوم</td></tr>
+              <tr><td class="tbl-mono">TW-8803</td><td>ريم حسام</td><td>420 EGP</td><td><span class="chip chip-amber">انتظار</span></td><td>أمس</td></tr>
+              <tr><td class="tbl-mono">TW-8804</td><td>كريم ناصر</td><td>—</td><td><span class="chip chip-red">مُعاد</span></td><td>أمس</td></tr>
+              <tr><td class="tbl-mono">TW-8805</td><td>ليلى سعيد</td><td>220 EGP</td><td><span class="chip chip-green">مُسلَّم</span></td><td>أمس</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="col">
+          <div class="wallet-card">
+            <div style="font-size:12px;opacity:.6">رصيد المحفظة</div>
+            <div class="wallet-amount">12,400 EGP</div>
+            <div class="wallet-sub">COD محصَّل · آخر تحديث: اليوم 10:34</div>
+            <button onclick="showView('payout',null);setActive('payout')" style="margin-top:14px;background:rgba(255,255,255,.15);color:#fff;border:none;padding:7px 16px;border-radius:var(--r-sm);font-size:12.5px;cursor:pointer;display:flex;align-items:center;gap:6px;font-family:inherit"><i class="ti ti-building-bank"></i>طلب سحب</button>
+          </div>
+          <div class="card">
+            <div class="card-hd"><span class="card-title">استخدام الخطة</span><span class="chip chip-teal">Enterprise</span></div>
+            <div style="font-size:12.5px;margin-bottom:8px;display:flex;justify-content:space-between"><span style="color:var(--text3)">الشحنات الشهرية</span><b>248 / 500</b></div>
+            <div class="prog"><div class="prog-fill pf-blue" style="width:49.6%"></div></div>
+            <div style="font-size:11px;color:var(--text3);margin-top:5px">252 شحنة متبقية حتى نهاية الشهر</div>
+            <div class="divider"></div>
+            <div style="font-size:12px;display:flex;justify-content:space-between;color:var(--text3)"><span>تجديد الخطة</span><span>1 يونيو 2025</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-hd"><span class="card-title">أداء الشحنات — آخر 7 أيام</span></div>
+        <div class="chart-bars" style="height:100px">
+          <div class="bar-col"><div class="bar-fill" style="background:var(--blue2);height:40%"></div><div class="bar-lbl">سبت</div></div>
+          <div class="bar-col"><div class="bar-fill" style="background:var(--blue2);height:65%"></div><div class="bar-lbl">أحد</div></div>
+          <div class="bar-col"><div class="bar-fill" style="background:var(--blue2);height:35%"></div><div class="bar-lbl">اثن</div></div>
+          <div class="bar-col"><div class="bar-fill" style="background:var(--blue2);height:80%"></div><div class="bar-lbl">ثلا</div></div>
+          <div class="bar-col"><div class="bar-fill" style="background:var(--blue2);height:55%"></div><div class="bar-lbl">أرب</div></div>
+          <div class="bar-col"><div class="bar-fill" style="background:var(--teal);height:90%"></div><div class="bar-lbl">خمي</div></div>
+          <div class="bar-col"><div class="bar-fill" style="background:var(--teal);height:72%"></div><div class="bar-lbl">جمع</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════ CREATE SHIPMENT ════ -->
+    <div id="view-create" class="page-view" style="display:none">
+      <div class="hero-strip">
+        <div class="hero-ico"><i class="ti ti-plus"></i></div>
+        <div><h2>إنشاء شحنة جديدة</h2><p>أدخل بيانات المستلم والطرد ثم اضغط إنشاء</p></div>
+      </div>
+      <div class="g2">
+        <div class="col">
+          <div class="card">
+            <div class="card-hd"><span class="card-title">بيانات المستلم</span></div>
+            <div class="form-row" style="margin-bottom:10px">
+              <div class="form-field"><label class="form-label">الاسم كاملًا *</label><input class="form-input" placeholder="محمد أحمد علي"></div>
+              <div class="form-field"><label class="form-label">رقم الهاتف *</label><input class="form-input" placeholder="01XXXXXXXXX"></div>
+            </div>
+            <div class="form-field" style="margin-bottom:10px"><label class="form-label">رقم هاتف بديل</label><input class="form-input" placeholder="اختياري"></div>
+            <div class="form-field" style="margin-bottom:10px"><label class="form-label">العنوان بالتفصيل *</label><input class="form-input" placeholder="رقم المبنى، الشارع، الحي"></div>
+            <div class="form-row" style="margin-bottom:10px">
+              <div class="form-field"><label class="form-label">المحافظة *</label>
+                <select class="form-select"><option>القاهرة</option><option>الجيزة</option><option>الإسكندرية</option><option>الدقهلية</option><option>الشرقية</option><option>بني سويف</option></select>
+              </div>
+              <div class="form-field"><label class="form-label">المنطقة</label><input class="form-input" placeholder="المعادي، مدينة نصر…"></div>
+            </div>
+            <div class="form-field"><label class="form-label">ملاحظات للسائق</label><input class="form-input" placeholder="مثلاً: اتصل قبل الوصول بـ 30 دقيقة"></div>
+          </div>
+
+          <div class="card">
+            <div class="card-hd"><span class="card-title">بيانات الطرد</span></div>
+            <div class="form-row" style="margin-bottom:10px">
+              <div class="form-field"><label class="form-label">الوزن (كجم) *</label><input class="form-input" type="number" step="0.1" placeholder="1.0"></div>
+              <div class="form-field"><label class="form-label">نوع الطرد</label><select class="form-select"><option>عادي</option><option>هش / قابل للكسر</option><option>قيمة عالية</option><option>مبرد</option></select></div>
+            </div>
+            <div class="form-row" style="margin-bottom:10px">
+              <div class="form-field"><label class="form-label">الأبعاد — طول (سم)</label><input class="form-input" type="number" placeholder="30"></div>
+              <div class="form-field"><label class="form-label">عرض × ارتفاع (سم)</label><input class="form-input" type="number" placeholder="20"></div>
+            </div>
+            <div class="form-row">
+              <div class="form-field"><label class="form-label">مبلغ COD (EGP)</label><input class="form-input" type="number" placeholder="0" id="cod-input" oninput="calcFee()"></div>
+              <div class="form-field"><label class="form-label">نوع الخدمة</label><select class="form-select" onchange="calcFee()"><option value="24">24 ساعة — 35 EGP</option><option value="48">48 ساعة — 25 EGP</option><option value="ex">Express (اليوم) — 60 EGP</option></select></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col">
+          <div class="card">
+            <div class="card-hd"><span class="card-title">ملخص التكلفة</span></div>
+            <div style="display:flex;flex-direction:column;gap:8px;font-size:13px">
+              <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--bdr)"><span style="color:var(--text3)">رسوم الشحن</span><span id="fee-ship">35 EGP</span></div>
+              <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--bdr)"><span style="color:var(--text3)">رسوم COD (1.5%)</span><span id="fee-cod">0 EGP</span></div>
+              <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--bdr)"><span style="color:var(--text3)">ضريبة القيمة المضافة (14%)</span><span id="fee-vat">4.9 EGP</span></div>
+              <div style="display:flex;justify-content:space-between;padding:8px 0;font-weight:700;font-size:15px"><span>الإجمالي</span><span id="fee-total" style="color:var(--blue2)">39.9 EGP</span></div>
+            </div>
+            <div class="divider"></div>
+            <button class="btn-full btn-teal-full" onclick="createShipment()"><i class="ti ti-check"></i>تأكيد وإنشاء الشحنة</button>
+            <button class="btn-full btn-out" style="margin-top:8px">حفظ كمسودة</button>
+          </div>
+
+          <div class="card">
+            <div class="card-hd"><span class="card-title">وقت التسليم المتوقع</span></div>
+            <div style="display:flex;flex-direction:column;gap:10px;font-size:12.5px">
+              <div style="display:flex;align-items:center;gap:10px;padding:10px;background:var(--surf2);border-radius:var(--r-sm);border:2px solid var(--teal);cursor:pointer"><i class="ti ti-bolt" style="color:var(--teal);font-size:20px"></i><div><div style="font-weight:600">Express — اليوم</div><div style="color:var(--text3);font-size:11px">التسليم خلال 4-6 ساعات · 60 EGP</div></div></div>
+              <div style="display:flex;align-items:center;gap:10px;padding:10px;background:var(--surf2);border-radius:var(--r-sm);border:1px solid var(--bdr);cursor:pointer"><i class="ti ti-clock" style="color:var(--blue2);font-size:20px"></i><div><div style="font-weight:600">24 ساعة</div><div style="color:var(--text3);font-size:11px">التسليم غدًا · 35 EGP</div></div></div>
+              <div style="display:flex;align-items:center;gap:10px;padding:10px;background:var(--surf2);border-radius:var(--r-sm);border:1px solid var(--bdr);cursor:pointer"><i class="ti ti-calendar" style="color:var(--text3);font-size:20px"></i><div><div style="font-weight:600">48 ساعة</div><div style="color:var(--text3);font-size:11px">التسليم بعد يومين · 25 EGP</div></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════ BULK UPLOAD ════ -->
+    <div id="view-bulk" class="page-view" style="display:none">
+      <div class="hero-strip">
+        <div class="hero-ico"><i class="ti ti-upload"></i></div>
+        <div><h2>رفع شحنات CSV</h2><p>ارفع حتى 500 شحنة دفعة واحدة عبر ملف CSV</p></div>
+        <div class="hero-actions">
+          <button class="hbtn hbtn-ghost" onclick="toast('تم تنزيل النموذج','success')"><i class="ti ti-download"></i>تنزيل النموذج</button>
+        </div>
+      </div>
+      <div class="g2">
+        <div class="col">
+          <div class="card">
+            <div class="card-hd"><span class="card-title">رفع الملف</span></div>
+            <div class="upload-zone" onclick="toast('يمكنك رفع ملف CSV هنا','info')">
+              <i class="ti ti-file-spreadsheet"></i>
+              <p style="font-weight:600;margin-bottom:4px">اسحب ملف CSV هنا أو اضغط للاختيار</p>
+              <p style="font-size:11px;color:var(--text3)">الحجم الأقصى 10MB · حتى 500 صف</p>
+            </div>
+            <div class="divider"></div>
+            <div class="card-title" style="margin-bottom:10px;font-size:12px">أعمدة CSV المطلوبة:</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:11.5px">
+              <div style="background:var(--surf2);border-radius:4px;padding:5px 8px;font-family:'JetBrains Mono',monospace;color:var(--blue)">recipient_name</div>
+              <div style="background:var(--surf2);border-radius:4px;padding:5px 8px;font-family:'JetBrains Mono',monospace;color:var(--blue)">recipient_phone</div>
+              <div style="background:var(--surf2);border-radius:4px;padding:5px 8px;font-family:'JetBrains Mono',monospace;color:var(--blue)">address</div>
+              <div style="background:var(--surf2);border-radius:4px;padding:5px 8px;font-family:'JetBrains Mono',monospace;color:var(--blue)">governorate</div>
+              <div style="background:var(--surf2);border-radius:4px;padding:5px 8px;font-family:'JetBrains Mono',monospace;color:var(--blue)">weight_kg</div>
+              <div style="background:var(--surf2);border-radius:4px;padding:5px 8px;font-family:'JetBrains Mono',monospace;color:var(--blue)">cod_amount</div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-hd"><span class="card-title">آخر عمليات الرفع</span></div>
+          <table class="tbl">
+            <thead><tr><th>الملف</th><th>الشحنات</th><th>نجح</th><th>خطأ</th><th>التاريخ</th><th>الحالة</th></tr></thead>
+            <tbody>
+              <tr><td style="font-size:11.5px">orders_may_17.csv</td><td>120</td><td style="color:var(--teal2)">118</td><td style="color:var(--danger)">2</td><td>اليوم</td><td><span class="chip chip-green">مكتمل</span></td></tr>
+              <tr><td style="font-size:11.5px">batch_may_14.csv</td><td>85</td><td style="color:var(--teal2)">85</td><td style="color:var(--text3)">0</td><td>قبل 3 أيام</td><td><span class="chip chip-green">مكتمل</span></td></tr>
+              <tr><td style="font-size:11.5px">may_week2.csv</td><td>200</td><td style="color:var(--teal2)">196</td><td style="color:var(--danger)">4</td><td>قبل أسبوع</td><td><span class="chip chip-green">مكتمل</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════ MY SHIPMENTS ════ -->
+    <div id="view-shipments" class="page-view" style="display:none">
+      <div class="stats-row">
+        <div class="stat-card"><div class="stat-accent" style="background:var(--blue2)"></div><div class="stat-lbl"><i class="ti ti-package"></i>الكل</div><div class="stat-val">248</div></div>
+        <div class="stat-card"><div class="stat-accent" style="background:var(--teal)"></div><div class="stat-lbl"><i class="ti ti-circle-check"></i>مُسلَّم</div><div class="stat-val">223</div></div>
+        <div class="stat-card"><div class="stat-accent" style="background:var(--gold)"></div><div class="stat-lbl"><i class="ti ti-clock"></i>جارٍ</div><div class="stat-val">21</div></div>
+        <div class="stat-card"><div class="stat-accent" style="background:var(--danger)"></div><div class="stat-lbl"><i class="ti ti-rotate-2"></i>مُعاد</div><div class="stat-val">4</div></div>
+      </div>
+      <div class="card">
+        <div class="card-hd">
+          <span class="card-title">جميع الشحنات</span>
+          <div style="display:flex;gap:8px">
+            <div class="tb-search" style="width:180px"><i class="ti ti-search"></i><input type="text" placeholder="رقم التتبع…"></div>
+            <select class="form-select" style="width:120px;padding:5px 8px;font-size:12px"><option>كل الحالات</option><option>مُسلَّم</option><option>في الطريق</option><option>مُعاد</option></select>
+          </div>
+        </div>
+        <div class="tbl-scroll"><table class="tbl">
+          <thead><tr><th>التتبع</th><th>المستلم</th><th>الهاتف</th><th>المنطقة</th><th>COD</th><th>الرسوم</th><th>السائق</th><th>الحالة</th><th>التاريخ</th></tr></thead>
+          <tbody>
+            <tr><td class="tbl-mono">TW-8810</td><td>نادر سمير</td><td>01012345</td><td>القاهرة</td><td>400 EGP</td><td>42 EGP</td><td>خالد م.</td><td><span class="chip chip-green">مُسلَّم</span></td><td>اليوم</td></tr>
+            <tr><td class="tbl-mono">TW-8809</td><td>هبة رشدي</td><td>01112345</td><td>الجيزة</td><td>280 EGP</td><td>38 EGP</td><td>يوسف إ.</td><td><span class="chip chip-blue">في الطريق</span></td><td>اليوم</td></tr>
+            <tr><td class="tbl-mono">TW-8808</td><td>عمرو طه</td><td>01212345</td><td>الشرقية</td><td>550 EGP</td><td>45 EGP</td><td>—</td><td><span class="chip chip-amber">انتظار</span></td><td>أمس</td></tr>
+            <tr><td class="tbl-mono">TW-8807</td><td>دينا فتحي</td><td>01512345</td><td>القاهرة</td><td>—</td><td>35 EGP</td><td>هاني س.</td><td><span class="chip chip-red">مُعاد</span></td><td>أمس</td></tr>
+            <tr><td class="tbl-mono">TW-8806</td><td>أيمن جمال</td><td>01612345</td><td>الإسكندرية</td><td>320 EGP</td><td>40 EGP</td><td>خالد م.</td><td><span class="chip chip-green">مُسلَّم</span></td><td>أمس</td></tr>
+            <tr><td class="tbl-mono">TW-8805</td><td>ليلى سعيد</td><td>01712345</td><td>الجيزة</td><td>220 EGP</td><td>38 EGP</td><td>يوسف إ.</td><td><span class="chip chip-green">مُسلَّم</span></td><td>أمس</td></tr>
+          </tbody>
+        </table></div>
+      </div>
+    </div>
+
+    <!-- ════ TRACKING ════ -->
+    <div id="view-tracking" class="page-view" style="display:none">
+      <div class="hero-strip">
+        <div class="hero-ico"><i class="ti ti-map-pin"></i></div>
+        <div><h2>تتبع شحنة</h2><p>أدخل رقم التتبع لعرض الموقع الحالي والتاريخ الكامل</p></div>
+      </div>
+      <div class="g2">
+        <div class="col">
+          <div class="card">
+            <div class="card-hd"><span class="card-title">رقم التتبع</span></div>
+            <div style="display:flex;gap:8px;margin-bottom:16px">
+              <input class="form-input" id="track-input" placeholder="TW-XXXX" style="flex:1">
+              <button class="btn-full btn-navy-full" style="width:auto;padding:8px 18px" onclick="trackShipment()"><i class="ti ti-search"></i>تتبع</button>
+            </div>
+            <div id="track-result" style="display:none">
+              <div style="background:var(--surf2);border-radius:var(--r-sm);padding:14px;border:1px solid var(--bdr);margin-bottom:14px">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+                  <span class="tbl-mono" style="font-size:14px;font-weight:700">TW-8801</span>
+                  <span class="chip chip-green">مُسلَّم</span>
+                </div>
+                <div style="font-size:12px;color:var(--text3);display:grid;grid-template-columns:1fr 1fr;gap:5px">
+                  <span>المستلم: <b style="color:var(--text)">منى رضا</b></span>
+                  <span>السائق: <b style="color:var(--text)">خالد منصور</b></span>
+                  <span>المنطقة: <b style="color:var(--text)">القاهرة — المعادي</b></span>
+                  <span>COD: <b style="color:var(--teal2)">350 EGP ✓</b></span>
+                </div>
+              </div>
+              <div class="card-title" style="margin-bottom:12px">تاريخ الشحنة</div>
+              <div style="position:relative;padding-right:20px">
+                <div style="position:absolute;right:6px;top:12px;bottom:0;width:1px;background:var(--bdr2)"></div>
+                <div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:12px;position:relative"><div style="width:12px;height:12px;border-radius:50%;background:var(--teal);flex-shrink:0;margin-top:3px;position:absolute;right:-14px"></div><div style="padding-right:8px"><div style="font-size:12.5px;font-weight:500">تم التسليم بنجاح</div><div style="font-size:11px;color:var(--text3)">اليوم 10:34 · توقيع المستلم</div></div></div>
+                <div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:12px;position:relative;padding-right:8px"><div style="width:10px;height:10px;border-radius:50%;background:var(--blue2);flex-shrink:0;margin-top:4px;position:absolute;right:-13px"></div><div><div style="font-size:12.5px;font-weight:500">في طريق التسليم</div><div style="font-size:11px;color:var(--text3)">اليوم 09:20 · السائق خالد منصور</div></div></div>
+                <div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:12px;position:relative;padding-right:8px"><div style="width:10px;height:10px;border-radius:50%;background:var(--gold);flex-shrink:0;margin-top:4px;position:absolute;right:-13px"></div><div><div style="font-size:12.5px;font-weight:500">خرج من المستودع</div><div style="font-size:11px;color:var(--text3)">اليوم 08:15 · Hub 01 القاهرة</div></div></div>
+                <div style="display:flex;align-items:flex-start;gap:10px;position:relative;padding-right:8px"><div style="width:10px;height:10px;border-radius:50%;background:var(--text3);flex-shrink:0;margin-top:4px;position:absolute;right:-13px"></div><div><div style="font-size:12.5px;font-weight:500">استُلم في المستودع</div><div style="font-size:11px;color:var(--text3)">أمس 19:00 · مسح الباركود</div></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card"><div class="map-ph"><i class="ti ti-map"></i><span>خريطة التتبع اللحظي</span><span style="font-size:11px">متاح مع Google Maps API</span></div></div>
+      </div>
+    </div>
+
+    <!-- ════ WALLET ════ -->
+    <div id="view-wallet" class="page-view" style="display:none">
+      <div class="g2" style="margin-bottom:16px">
+        <div class="wallet-card">
+          <div style="font-size:12px;opacity:.6">رصيد المحفظة الحالي</div>
+          <div class="wallet-amount">12,400 EGP</div>
+          <div class="wallet-sub">آخر تحديث: اليوم 10:34</div>
+          <div style="display:flex;gap:8px;margin-top:14px">
+            <button onclick="showView('payout',null);setActive('payout')" style="background:var(--teal);color:var(--navy);border:none;padding:7px 14px;border-radius:var(--r-sm);font-size:12.5px;cursor:pointer;font-weight:700;font-family:inherit;display:flex;align-items:center;gap:5px"><i class="ti ti-building-bank"></i>طلب سحب</button>
+          </div>
+        </div>
+        <div class="g2" style="margin-bottom:0">
+          <div class="kpi"><i class="ti ti-package"></i><div class="kpi-val" style="color:var(--teal2)">21,190</div><div class="kpi-lbl">إجمالي COD محصَّل (EGP)</div></div>
+          <div class="kpi"><i class="ti ti-building-bank"></i><div class="kpi-val" style="color:var(--navy)">8,790</div><div class="kpi-lbl">إجمالي المسحوب (EGP)</div></div>
+          <div class="kpi"><i class="ti ti-receipt"></i><div class="kpi-val" style="color:var(--gold)">1,240</div><div class="kpi-lbl">رسوم الشحن المدفوعة</div></div>
+          <div class="kpi"><i class="ti ti-clock"></i><div class="kpi-val" style="color:var(--danger)">1</div><div class="kpi-lbl">طلب سحب معلق</div></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-hd"><span class="card-title">سجل المعاملات</span></div>
+        <table class="tbl">
+          <thead><tr><th>النوع</th><th>الوصف</th><th>المبلغ</th><th>الرصيد بعد</th><th>التاريخ</th></tr></thead>
+          <tbody>
+            <tr><td><span class="chip chip-green">دائن</span></td><td>COD شحنة TW-8810 — نادر سمير</td><td style="color:var(--teal2);font-weight:600">+400 EGP</td><td>12,400</td><td>اليوم 10:40</td></tr>
+            <tr><td><span class="chip chip-red">مدين</span></td><td>رسوم شحن TW-8810</td><td style="color:var(--danger)">−42 EGP</td><td>12,000</td><td>اليوم 10:40</td></tr>
+            <tr><td><span class="chip chip-green">دائن</span></td><td>COD شحنة TW-8806 — أيمن جمال</td><td style="color:var(--teal2);font-weight:600">+320 EGP</td><td>12,042</td><td>أمس 18:20</td></tr>
+            <tr><td><span class="chip chip-blue">سحب</span></td><td>تحويل بنكي — Banque Misr ···4521</td><td style="color:var(--blue)">−5,000 EGP</td><td>11,722</td><td>قبل 3 أيام</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ════ PAYOUT ════ -->
+    <div id="view-payout" class="page-view" style="display:none">
+      <div class="g2">
+        <div class="card">
+          <div class="card-hd"><span class="card-title">طلب سحب جديد</span></div>
+          <div class="form-field" style="margin-bottom:12px"><label class="form-label">الرصيد المتاح للسحب</label><div style="font-size:20px;font-weight:700;color:var(--teal2);padding:10px 0">12,400 EGP</div></div>
+          <div class="form-field" style="margin-bottom:12px"><label class="form-label">المبلغ المطلوب (EGP) *</label><input class="form-input" type="number" placeholder="أدخل المبلغ" id="payout-amount"></div>
+          <div class="form-field" style="margin-bottom:12px"><label class="form-label">الحساب البنكي</label>
+            <select class="form-select"><option>Banque Misr ···4521 — أحمد محمد</option><option>CIB ···2210 — أحمد محمد</option><option>+ إضافة حساب جديد</option></select>
+          </div>
+          <div class="form-field" style="margin-bottom:16px"><label class="form-label">ملاحظات (اختياري)</label><input class="form-input" placeholder="سبب السحب أو ملاحظة للمحاسب"></div>
+          <button class="btn-full btn-teal-full" onclick="toast('تم إرسال طلب السحب — سيتم مراجعته خلال 24 ساعة','success')"><i class="ti ti-building-bank"></i>إرسال طلب السحب</button>
+        </div>
+        <div class="card">
+          <div class="card-hd"><span class="card-title">سجل طلبات السحب</span></div>
+          <table class="tbl">
+            <thead><tr><th>المبلغ</th><th>البنك</th><th>التاريخ</th><th>الحالة</th></tr></thead>
+            <tbody>
+              <tr><td><b>12,400 EGP</b></td><td>Banque Misr ···4521</td><td>اليوم</td><td><span class="chip chip-amber">انتظار</span></td></tr>
+              <tr><td><b>5,000 EGP</b></td><td>Banque Misr ···4521</td><td>قبل 3 أيام</td><td><span class="chip chip-green">مكتمل</span></td></tr>
+              <tr><td><b>8,200 EGP</b></td><td>CIB ···2210</td><td>قبل أسبوع</td><td><span class="chip chip-green">مكتمل</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════ INTEGRATIONS ════ -->
+    <div id="view-integrations" class="page-view" style="display:none">
+      <div class="hero-strip">
+        <div class="hero-ico"><i class="ti ti-plug"></i></div>
+        <div><h2>التكاملات</h2><p>ربط متجرك الإلكتروني لإنشاء الشحنات تلقائيًا</p></div>
+      </div>
+      <div class="g2">
+        <div class="col">
+          <div class="card">
+            <div class="card-hd"><span class="card-title">المتاحة للربط</span></div>
+            <div style="display:flex;flex-direction:column;gap:10px">
+              <div class="integration-card">
+                <div class="integration-logo" style="background:#e8f5e1"><span style="font-size:22px">🛒</span></div>
+                <div style="flex:1"><div class="integration-name">Shopify</div><div class="integration-meta">ربط مباشر عبر Shopify API</div></div>
+                <span class="chip chip-green">متصل</span>
+              </div>
+              <div class="integration-card">
+                <div class="integration-logo" style="background:#f3ebff"><span style="font-size:22px">🌐</span></div>
+                <div style="flex:1"><div class="integration-name">WooCommerce</div><div class="integration-meta">WordPress Plugin متاح</div></div>
+                <button class="tb-btn tb-btn-prim" style="font-size:11px;padding:5px 12px" onclick="toast('جاري تفعيل WooCommerce…','info')">ربط</button>
+              </div>
+              <div class="integration-card">
+                <div class="integration-logo" style="background:#e3f4ff"><span style="font-size:22px">📦</span></div>
+                <div style="flex:1"><div class="integration-name">REST API</div><div class="integration-meta">ربط مباشر عبر API Key</div></div>
+                <span class="chip chip-green">نشط</span>
+              </div>
+              <div class="integration-card">
+                <div class="integration-logo" style="background:#fff8e1"><span style="font-size:22px">🔔</span></div>
+                <div style="flex:1"><div class="integration-name">Webhooks</div><div class="integration-meta">إشعارات فورية لكل حدث</div></div>
+                <span class="chip chip-blue">3 نشط</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-hd"><span class="card-title">Shopify — إعدادات الربط</span><span class="chip chip-green">متصل</span></div>
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <div class="form-field"><label class="form-label">Store URL</label><input class="form-input" value="elegance-store.myshopify.com" readonly></div>
+            <div class="form-field"><label class="form-label">Access Token</label><input class="form-input" type="password" value="shpat_xxxxxxxxxxxxxxxxxx" readonly></div>
+            <div class="form-field"><label class="form-label">حدث الإنشاء التلقائي</label><select class="form-select"><option>عند تأكيد الطلب</option><option>عند الدفع</option><option>يدويًا فقط</option></select></div>
+            <button class="btn-full btn-navy-full" onclick="toast('تم حفظ إعدادات Shopify','success')"><i class="ti ti-device-floppy"></i>حفظ الإعدادات</button>
+            <button class="btn-full btn-out" onclick="toast('تم اختبار الاتصال بنجاح ✓','success')"><i class="ti ti-plug"></i>اختبار الاتصال</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════ API KEYS ════ -->
+    <div id="view-apikeys" class="page-view" style="display:none">
+      <div class="card" style="margin-bottom:14px">
+        <div class="card-hd"><span class="card-title">API Keys النشطة</span><button class="tb-btn tb-btn-prim" onclick="toast('تم إنشاء API Key جديد','success')"><i class="ti ti-plus"></i>مفتاح جديد</button></div>
+        <div class="api-key-row"><i class="ti ti-key" style="color:var(--gold)"></i><span class="api-key-val">twsl_live_Ma3xP9kQrY7bVnCwJdFsLhE2uTgXiN5oA</span><span class="chip chip-green" style="flex-shrink:0">نشط</span><button class="tb-btn" style="padding:4px 8px;font-size:11px;flex-shrink:0" onclick="toast('تم النسخ!','success')"><i class="ti ti-copy"></i></button><button class="tb-btn" style="padding:4px 8px;font-size:11px;flex-shrink:0;color:var(--danger)" onclick="toast('تم إلغاء المفتاح','error')"><i class="ti ti-trash"></i></button></div>
+        <div class="api-key-row"><i class="ti ti-key" style="color:var(--text3)"></i><span class="api-key-val">twsl_test_Zk8mH1yBpQoLvRuWsXcNjEd4IgFtA6nM</span><span class="chip chip-amber" style="flex-shrink:0">اختبار</span><button class="tb-btn" style="padding:4px 8px;font-size:11px;flex-shrink:0" onclick="toast('تم النسخ!','success')"><i class="ti ti-copy"></i></button><button class="tb-btn" style="padding:4px 8px;font-size:11px;flex-shrink:0;color:var(--danger)"><i class="ti ti-trash"></i></button></div>
+      </div>
+      <div class="card">
+        <div class="card-hd"><span class="card-title">توثيق API سريع</span></div>
+        <div style="background:var(--navy);border-radius:var(--r-sm);padding:16px;font-family:'JetBrains Mono',monospace;font-size:12px;color:#e2e8f0;overflow-x:auto">
+          <div style="color:#64748b;margin-bottom:8px">// إنشاء شحنة عبر REST API</div>
+          <div><span style="color:#7dd3fc">POST</span> <span style="color:#86efac">https://api.twsela.com/v1/shipments</span></div>
+          <div style="margin-top:8px;color:#64748b">Authorization: Bearer &lt;API_KEY&gt;</div>
+          <div style="margin-top:8px">{</div>
+          <div style="padding-right:16px"><span style="color:#f9a8d4">"recipient_name"</span>: <span style="color:#86efac">"محمد أحمد"</span>,</div>
+          <div style="padding-right:16px"><span style="color:#f9a8d4">"phone"</span>: <span style="color:#86efac">"01012345678"</span>,</div>
+          <div style="padding-right:16px"><span style="color:#f9a8d4">"address"</span>: <span style="color:#86efac">"15 شارع التحرير، المعادي"</span>,</div>
+          <div style="padding-right:16px"><span style="color:#f9a8d4">"cod_amount"</span>: <span style="color:#fcd34d">350</span></div>
+          <div>}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════ WEBHOOKS ════ -->
+    <div id="view-webhooks" class="page-view" style="display:none">
+      <div class="card" style="margin-bottom:14px">
+        <div class="card-hd"><span class="card-title">Webhooks المُفعَّلة</span><button class="tb-btn tb-btn-prim" onclick="toast('إضافة Webhook جديد','info')"><i class="ti ti-plus"></i>إضافة</button></div>
+        <div class="webhook-row"><div class="webhook-url">https://mystore.com/webhooks/twsela/delivered</div><span class="chip chip-green">shipment.delivered</span><span class="chip chip-green" style="margin-right:6px">نشط</span><button class="tb-btn" style="padding:4px 8px;font-size:11px" onclick="toast('تم اختبار Webhook','success')"><i class="ti ti-send"></i></button></div>
+        <div class="webhook-row"><div class="webhook-url">https://mystore.com/webhooks/twsela/returned</div><span class="chip chip-red">shipment.returned</span><span class="chip chip-green" style="margin-right:6px">نشط</span><button class="tb-btn" style="padding:4px 8px;font-size:11px" onclick="toast('تم اختبار Webhook','success')"><i class="ti ti-send"></i></button></div>
+        <div class="webhook-row"><div class="webhook-url">https://mystore.com/webhooks/twsela/cod</div><span class="chip chip-teal">cod.collected</span><span class="chip chip-green" style="margin-right:6px">نشط</span><button class="tb-btn" style="padding:4px 8px;font-size:11px" onclick="toast('تم اختبار Webhook','success')"><i class="ti ti-send"></i></button></div>
+      </div>
+    </div>
+
+    <!-- ════ TICKETS ════ -->
+    <div id="view-tickets" class="page-view" style="display:none">
+      <div class="g2">
+        <div class="card">
+          <div class="card-hd"><span class="card-title">تذاكر الدعم</span><button class="tb-btn tb-btn-prim" onclick="toast('إنشاء تذكرة جديدة','info')"><i class="ti ti-plus"></i>تذكرة جديدة</button></div>
+          <div class="ticket-row"><div class="ticket-icon" style="background:#fde8e7;color:var(--danger)"><i class="ti ti-alert-circle"></i></div><div style="flex:1"><div style="font-size:12.5px;font-weight:500">شحنة TW-8804 مُعادة بدون سبب</div><div style="font-size:11px;color:var(--text3)">مفتوحة · منذ يوم</div></div><span class="chip chip-red">عاجل</span></div>
+          <div class="ticket-row"><div class="ticket-icon" style="background:#e3effe;color:var(--blue)"><i class="ti ti-question-mark"></i></div><div style="flex:1"><div style="font-size:12.5px;font-weight:500">استفسار عن تسعيرة Shopify</div><div style="font-size:11px;color:var(--text3)">مُغلقة · قبل 3 أيام</div></div><span class="chip chip-green">محلولة</span></div>
+        </div>
+        <div class="card">
+          <div class="card-hd"><span class="card-title">إنشاء تذكرة جديدة</span></div>
+          <div class="form-field" style="margin-bottom:10px"><label class="form-label">النوع</label><select class="form-select"><option>شكوى</option><option>استفسار</option><option>مشكلة تقنية</option><option>طلب استرداد</option></select></div>
+          <div class="form-field" style="margin-bottom:10px"><label class="form-label">رقم الشحنة (اختياري)</label><input class="form-input" placeholder="TW-XXXX"></div>
+          <div class="form-field" style="margin-bottom:10px"><label class="form-label">الوصف</label><textarea class="form-input" rows="4" placeholder="اشرح المشكلة بالتفصيل…" style="resize:vertical"></textarea></div>
+          <button class="btn-full btn-navy-full" onclick="toast('تم إرسال التذكرة — سيتم الرد خلال 4 ساعات','success')"><i class="ti ti-send"></i>إرسال</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════ SETTINGS ════ -->
+    <div id="view-settings" class="page-view" style="display:none">
+      <div class="g2">
+        <div class="card">
+          <div class="card-hd"><span class="card-title">بيانات المتجر</span></div>
+          <div class="form-field" style="margin-bottom:10px"><label class="form-label">اسم المتجر</label><input class="form-input" value="متجر الأناقة"></div>
+          <div class="form-field" style="margin-bottom:10px"><label class="form-label">البريد الإلكتروني</label><input class="form-input" type="email" value="info@elegance-store.com"></div>
+          <div class="form-field" style="margin-bottom:10px"><label class="form-label">رقم الهاتف</label><input class="form-input" value="01012345678"></div>
+          <div class="form-field" style="margin-bottom:16px"><label class="form-label">العنوان الرئيسي</label><input class="form-input" value="15 شارع التحرير، المعادي، القاهرة"></div>
+          <button class="btn-full btn-navy-full" onclick="toast('تم حفظ البيانات','success')"><i class="ti ti-device-floppy"></i>حفظ التغييرات</button>
+        </div>
+        <div class="card">
+          <div class="card-hd"><span class="card-title">إعدادات الإشعارات</span></div>
+          <div style="display:flex;flex-direction:column;gap:12px;font-size:12.5px">
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--bdr)"><span>إشعار تسليم الشحنة</span><span class="chip chip-green">مُفعَّل</span></div>
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--bdr)"><span>إشعار إعادة الشحنة</span><span class="chip chip-green">مُفعَّل</span></div>
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--bdr)"><span>إشعار تحصيل COD</span><span class="chip chip-green">مُفعَّل</span></div>
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--bdr)"><span>تقرير يومي بالبريد</span><span class="chip chip-gray">مُعطَّل</span></div>
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0"><span>تنبيه رصيد منخفض</span><span class="chip chip-green">مُفعَّل</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- INVOICES placeholder -->
+    <div id="view-invoices" class="page-view" style="display:none"><div class="hero-strip"><div class="hero-ico"><i class="ti ti-file-invoice"></i></div><div><h2>الفواتير</h2><p>فواتير الشحن الشهرية وإيصالات COD</p></div></div><div class="card"><div class="empty"><i class="ti ti-file-invoice"></i><p>قائمة الفواتير وتحميل PDF</p></div></div></div>
+
+  </div>
+</div>
+</div>
+
+<div class="toast-wrap" id="toasts"></div>
+
+<script>
+const titles={overview:'الرئيسية — Merchant Portal',create:'إنشاء شحنة جديدة',bulk:'رفع شحنات CSV',shipments:'شحناتي',tracking:'تتبع شحنة',wallet:'المحفظة',invoices:'الفواتير',payout:'طلب سحب',integrations:'التكاملات',apikeys:'API Keys',webhooks:'Webhooks',tickets:'تذاكر الدعم',settings:'إعدادات المتجر'};
+
+function showView(id,btn){
+  document.querySelectorAll('.page-view').forEach(v=>v.style.display='none');
+  const el=document.getElementById('view-'+id);
+  if(el){el.style.display='block';}
+  if(btn){document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));btn.classList.add('active');}
+  document.getElementById('tb-title').textContent=titles[id]||id;
+}
+function setActive(id){
+  document.querySelectorAll('.nav-item').forEach(b=>{if(b.textContent.includes(id)||b.getAttribute('onclick')?.includes(id))b.classList.add('active');else b.classList.remove('active');});
+}
+function trackShipment(){document.getElementById('track-result').style.display='block';toast('تم العثور على الشحنة TW-8801','success');}
+function calcFee(){
+  const cod=parseFloat(document.getElementById('cod-input').value)||0;
+  const ship=35,codFee=cod*0.015,vat=(ship+codFee)*0.14;
+  document.getElementById('fee-ship').textContent=ship+' EGP';
+  document.getElementById('fee-cod').textContent=codFee.toFixed(1)+' EGP';
+  document.getElementById('fee-vat').textContent=vat.toFixed(1)+' EGP';
+  document.getElementById('fee-total').textContent=(ship+codFee+vat).toFixed(1)+' EGP';
+}
+function createShipment(){toast('تم إنشاء الشحنة TW-8811 بنجاح ✓','success');showView('shipments',null);}
+function toast(msg,type='info'){
+  const w=document.getElementById('toasts');const t=document.createElement('div');
+  t.className=`toast toast-${type}`;
+  t.innerHTML=`<i class="ti ti-${type==='success'?'circle-check':type==='error'?'circle-x':'info-circle'}"></i>${msg}`;
+  w.appendChild(t);setTimeout(()=>t.remove(),3200);
+}
+</script>
+</body>
+</html>

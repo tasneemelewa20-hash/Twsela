@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>توصيلة — Warehouse Portal</title>
+<link rel="stylesheet" href="portal.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.4.0/dist/tabler-icons.min.css">
+<style>
+.wh-hero{background:linear-gradient(135deg,#07213d 0%,#1358a5 60%,#7c3aed 100%);border-radius:var(--r);padding:20px 22px;color:#fff;margin-bottom:16px}
+.wh-hero-stats{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-top:16px}
+.wh-stat{background:rgba(255,255,255,.08);border-radius:8px;padding:10px;text-align:center}
+.wh-stat-val{font-size:22px;font-weight:700;line-height:1}
+.wh-stat-lbl{font-size:10px;opacity:.55;margin-top:3px}
+
+/* Bin Map */
+.bin-section{margin-bottom:14px}
+.bin-section-title{font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px;padding:0 2px}
+.bin-grid-lg{display:grid;grid-template-columns:repeat(10,1fr);gap:4px}
+.bin-lg{height:36px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;cursor:pointer;border:1px solid transparent;transition:all .12s;position:relative}
+.bin-lg:hover{transform:scale(1.08);z-index:2}
+.bin-lg.selected{box-shadow:0 0 0 2.5px var(--blue2);z-index:3}
+
+/* Intake table */
+.intake-row{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--bdr);font-size:12.5px}
+.intake-row:last-child{border-bottom:none}
+.intake-code{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--blue);min-width:72px}
+.intake-sender{flex:1;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.intake-weight{color:var(--text3);font-size:11.5px;min-width:52px;text-align:center}
+.intake-bin{min-width:40px;text-align:center;font-weight:600;color:var(--blue2);font-size:11px;font-family:'JetBrains Mono',monospace}
+
+/* Manifest */
+.manifest-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--bdr);font-size:12.5px}
+.manifest-row:last-child{border-bottom:none}
+.vehicle-card{background:var(--surf2);border:1px solid var(--bdr);border-radius:var(--r-sm);padding:12px 14px;margin-bottom:8px;transition:all .15s;cursor:pointer}
+.vehicle-card:hover{border-color:var(--bdr2);box-shadow:var(--sh-sm)}
+.vehicle-card.loading{border-color:var(--blue2);background:rgba(26,112,216,.04)}
+.vehicle-plate{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;color:var(--navy)}
+.vehicle-meta{font-size:11px;color:var(--text3);margin-top:2px}
+.load-prog{margin-top:8px}
+
+/* Inventory */
+.inv-row{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--bdr);font-size:12.5px}
+.inv-row:last-child{border-bottom:none}
+.inv-sku{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--blue);min-width:70px}
+
+/* Scan animation */
+@keyframes scanLine{0%{top:0}50%{top:calc(100% - 3px)}100%{top:0}}
+.scan-anim{position:relative;overflow:hidden}
+.scan-anim::after{content:'';position:absolute;right:0;left:0;height:3px;background:linear-gradient(90deg,transparent,var(--teal),transparent);animation:scanLine 2s linear infinite;pointer-events:none}
+
+/* Tooltip on bin hover */
+.bin-tooltip{position:fixed;background:var(--navy);color:#fff;font-size:11px;padding:5px 9px;border-radius:5px;pointer-events:none;z-index:999;display:none;white-space:nowrap}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- ══ SIDEBAR ══ -->
+<aside class="sidebar">
+  <div class="sb-logo">
+    <div class="sb-logo-icon">ت</div>
+    <div><div class="sb-logo-name">توصيلة</div><div class="sb-logo-sub">Warehouse Portal</div></div>
+  </div>
+  <div class="sb-portal-badge">
+    <i class="ti ti-building-warehouse" style="color:var(--purple);font-size:18px"></i>
+    <div><div class="sb-portal-badge-name">Hub 01 — القاهرة</div><div class="sb-portal-badge-role">Warehouse Staff</div></div>
+    <div class="sb-portal-dot"></div>
+  </div>
+  <nav class="sb-nav">
+    <div class="nav-grp">العمليات</div>
+    <button class="nav-item active" onclick="showView('overview',this)"><i class="ti ti-layout-dashboard"></i>نظرة عامة</button>
+    <button class="nav-item" onclick="showView('intake',this)"><i class="ti ti-inbox"></i>استلام الطرود<span class="nav-bdg bdg-amber">48</span></button>
+    <button class="nav-item" onclick="showView('scan',this)"><i class="ti ti-qrcode"></i>مسح الباركود</button>
+    <button class="nav-item" onclick="showView('binmap',this)"><i class="ti ti-grid-dots"></i>خريطة الصواني</button>
+    <button class="nav-item" onclick="showView('sort',this)"><i class="ti ti-arrows-sort"></i>الفرز والتصنيف</button>
+    <div class="nav-grp">الشحن</div>
+    <button class="nav-item" onclick="showView('manifest',this)"><i class="ti ti-file-text"></i>بيانات الشحن</button>
+    <button class="nav-item" onclick="showView('dispatch',this)"><i class="ti ti-truck"></i>تحميل المركبات<span class="nav-bdg bdg-blue">3</span></button>
+    <button class="nav-item" onclick="showView('labels',this)"><i class="ti ti-printer"></i>طباعة الملصقات</button>
+    <div class="nav-grp">المخزون</div>
+    <button class="nav-item" onclick="showView('inventory',this)"><i class="ti ti-packages"></i>المخزون</button>
+    <button class="nav-item" onclick="showView('returns',this)"><i class="ti ti-rotate-2"></i>الإعادة<span class="nav-bdg bdg-red">12</span></button>
+    <button class="nav-item" onclick="showView('lost',this)"><i class="ti ti-alert-triangle"></i>مفقود / تالف</button>
+    <div class="nav-grp">التقارير</div>
+    <button class="nav-item" onclick="showView('daily',this)"><i class="ti ti-chart-bar"></i>تقرير اليوم</button>
+    <button class="nav-item" onclick="showView('settings',this)"><i class="ti ti-settings"></i>إعدادات المستودع</button>
+  </nav>
+  <div class="sb-footer">
+    <div class="user-row">
+      <div class="avatar" style="background:var(--purple)">AT</div>
+      <div><div class="user-name">أحمد الطيب</div><div class="user-meta">Warehouse · Hub 01</div></div>
+      <i class="ti ti-logout"></i>
+    </div>
+  </div>
+</aside>
+
+<!-- ══ MAIN ══ -->
+<div class="main">
+  <div class="topbar">
+    <div class="tb-page-info">
+      <div class="tb-title" id="tb-title">نظرة عامة — Warehouse</div>
+      <div class="tb-sub">Hub 01 القاهرة · الأحد 18 مايو 2025 · <span id="clock"></span></div>
+    </div>
+    <div class="tb-search"><i class="ti ti-search"></i><input type="text" placeholder="بحث بكود الطرد أو التتبع…"></div>
+    <button class="tb-btn" onclick="toast('لا إشعارات جديدة','info')"><i class="ti ti-bell"></i><div class="notif-dot"></div></button>
+    <button class="tb-btn" onclick="toast('تم تحديث البيانات','success')"><i class="ti ti-refresh"></i></button>
+    <button class="tb-btn tb-btn-prim" onclick="showView('scan',null);setActive('scan')"><i class="ti ti-qrcode"></i>مسح</button>
+    <a href="index.html" class="tb-btn" style="text-decoration:none"><i class="ti ti-home"></i></a>
+  </div>
+
+  <div class="content">
+
+    <!-- ════ OVERVIEW ════ -->
+    <div id="view-overview" class="page-view">
+      <div class="wh-hero">
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <div>
+            <div style="font-size:12px;opacity:.6;margin-bottom:4px">Hub 01 — القاهرة الرئيسي</div>
+            <div style="font-size:22px;font-weight:700">وردية الصباح · جارية</div>
+            <div style="font-size:12px;opacity:.55;margin-top:3px">بدأت 07:00 · تنتهي 15:00 · <span id="wh-clock"></span></div>
+          </div>
+          <div style="text-align:center">
+            <div style="font-size:11px;opacity:.5;margin-bottom:5px">الطاقة المستخدمة</div>
+            <div style="position:relative;width:80px;height:80px;margin:0 auto">
+              <svg width="80" height="80" style="transform:rotate(-90deg)"><circle cx="40" cy="40" r="32" fill="none" stroke="rgba(255,255,255,.12)" stroke-width="6"/><circle cx="40" cy="40" r="32" fill="none" stroke="var(--gold)" stroke-width="6" stroke-dasharray="201" stroke-dashoffset="66" stroke-linecap="round"/></svg>
+              <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700">67%</div>
+            </div>
+          </div>
+        </div>
+        <div class="wh-hero-stats">
+          <div class="wh-stat"><div class="wh-stat-val" style="color:var(--teal)">48</div><div class="wh-stat-lbl">وارد اليوم</div></div>
+          <div class="wh-stat"><div class="wh-stat-val">23</div><div class="wh-stat-lbl">جاهز للإرسال</div></div>
+          <div class="wh-stat"><div class="wh-stat-val" style="color:var(--gold)">187</div><div class="wh-stat-lbl">في التخزين</div></div>
+          <div class="wh-stat"><div class="wh-stat-val" style="color:var(--danger)">12</div><div class="wh-stat-lbl">مُعادة</div></div>
+          <div class="wh-stat"><div class="wh-stat-val">7</div><div class="wh-stat-lbl">مركبات جاهزة</div></div>
+        </div>
+      </div>
+
+      <div class="g2">
+        <!-- Latest intake -->
+        <div class="card">
+          <div class="card-hd"><span class="card-title">آخر الواردات</span><button class="card-act" onclick="showView('intake',null);setActive('intake')">عرض الكل (48)</button></div>
+          <div>
+            <div class="intake-row"><span class="intake-code">TW-7701</span><span class="intake-sender">متجر الأناقة</span><span class="intake-weight">1.2 كجم</span><span class="intake-bin">A3</span><span class="chip chip-green">تم</span></div>
+            <div class="intake-row"><span class="intake-code">TW-7702</span><span class="intake-sender">تك ستور</span><span class="intake-weight">0.8 كجم</span><span class="intake-bin">—</span><span class="chip chip-blue">مسح</span></div>
+            <div class="intake-row"><span class="intake-code">TW-7703</span><span class="intake-sender">بوتيك ريم</span><span class="intake-weight">2.1 كجم</span><span class="intake-bin">B5</span><span class="chip chip-green">تم</span></div>
+            <div class="intake-row"><span class="intake-code">TW-7704</span><span class="intake-sender">فريش ماركت</span><span class="intake-weight">3.5 كجم</span><span class="intake-bin">—</span><span class="chip chip-amber">تحقق</span></div>
+            <div class="intake-row"><span class="intake-code">TW-7705</span><span class="intake-sender">Digital Hub</span><span class="intake-weight">1.9 كجم</span><span class="intake-bin">—</span><span class="chip chip-blue">مسح</span></div>
+            <div class="intake-row"><span class="intake-code">TW-7706</span><span class="intake-sender">متجر الأناقة</span><span class="intake-weight">0.6 كجم</span><span class="intake-bin">C2</span><span class="chip chip-green">تم</span></div>
+          </div>
+        </div>
+
+        <div class="col">
+          <!-- Capacity -->
+          <div class="card">
+            <div class="card-hd"><span class="card-title">الطاقة الاستيعابية</span></div>
+            <div style="display:flex;flex-direction:column;gap:8px;font-size:12px">
+              <div style="display:flex;align-items:center;gap:8px"><span style="min-width:60px;color:var(--text3)">المستخدم</span><div class="prog" style="flex:1"><div class="prog-fill pf-warn" style="width:67%"></div></div><b>67%</b></div>
+              <div style="display:flex;align-items:center;gap:8px"><span style="min-width:60px;color:var(--text3)">محجوز</span><div class="prog" style="flex:1"><div class="prog-fill pf-blue" style="width:12%"></div></div><b>12%</b></div>
+              <div style="display:flex;align-items:center;gap:8px"><span style="min-width:60px;color:var(--text3)">فارغ</span><div class="prog" style="flex:1"><div class="prog-fill pf-teal" style="width:21%"></div></div><b>21%</b></div>
+            </div>
+            <div class="divider"></div>
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;font-size:11.5px;text-align:center">
+              <div style="background:var(--surf2);border-radius:6px;padding:8px"><div style="font-weight:700;color:var(--blue2)">320</div><div style="color:var(--text3)">مشغول</div></div>
+              <div style="background:var(--surf2);border-radius:6px;padding:8px"><div style="font-weight:700;color:var(--gold)">58</div><div style="color:var(--text3)">محجوز</div></div>
+              <div style="background:var(--surf2);border-radius:6px;padding:8px"><div style="font-weight:700;color:var(--teal2)">102</div><div style="color:var(--text3)">فارغ</div></div>
+            </div>
+          </div>
+
+          <!-- Alerts -->
+          <div class="card">
+            <div class="card-hd"><span class="card-title">تنبيهات المستودع</span><span class="chip chip-red">3</span></div>
+            <div style="display:flex;flex-direction:column;gap:8px;font-size:12px">
+              <div style="background:#fde8e7;border-radius:6px;padding:9px 10px;border:1px solid rgba(229,55,58,.2);color:#b93028"><i class="ti ti-alert-triangle" style="margin-left:5px"></i>Aisle D ممتلئ 95% — يحتاج إفراغ فوري</div>
+              <div style="background:#fef3dc;border-radius:6px;padding:9px 10px;border:1px solid rgba(245,166,35,.2);color:#8a5d00"><i class="ti ti-clock" style="margin-left:5px"></i>12 طرد تجاوز SLA — بانتظار المعالجة</div>
+              <div style="background:#e3effe;border-radius:6px;padding:9px 10px;border:1px solid rgba(26,112,216,.15);color:#1358a5"><i class="ti ti-truck" style="margin-left:5px"></i>مركبة Van-03 جاهزة للتحميل</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Mini bin map preview -->
+      <div class="card">
+        <div class="card-hd"><span class="card-title">خريطة الصواني — معاينة سريعة</span><button class="card-act" onclick="showView('binmap',null);setActive('binmap')">عرض الكامل</button></div>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:10px">
+          <span style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--text3)"><span style="width:10px;height:10px;border-radius:2px;background:#eaf7ef;border:1px solid #b6e8cc;display:inline-block"></span>فارغ</span>
+          <span style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--text3)"><span style="width:10px;height:10px;border-radius:2px;background:#e3effe;border:1px solid #aaccf8;display:inline-block"></span>مشغول</span>
+          <span style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--text3)"><span style="width:10px;height:10px;border-radius:2px;background:#fef3dc;border:1px solid #f9d98a;display:inline-block"></span>محجوز</span>
+          <span style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--text3)"><span style="width:10px;height:10px;border-radius:2px;background:var(--surf3);display:inline-block"></span>معطل</span>
+        </div>
+        <div id="mini-bin-grid"></div>
+      </div>
+
+      <!-- Daily chart -->
+      <div class="card" style="margin-top:14px">
+        <div class="card-hd"><span class="card-title">حركة الطرود — آخر 7 أيام</span></div>
+        <div style="display:flex;gap:16px">
+          <div style="flex:1">
+            <div style="font-size:11px;color:var(--text3);margin-bottom:6px">واردة</div>
+            <div class="chart-bars" style="height:80px">
+              <div class="bar-col"><div class="bar-fill" style="background:var(--blue2);height:45%"></div><div class="bar-lbl">سبت</div></div>
+              <div class="bar-col"><div class="bar-fill" style="background:var(--blue2);height:62%"></div><div class="bar-lbl">أحد</div></div>
+              <div class="bar-col"><div class="bar-fill" style="background:var(--blue2);height:38%"></div><div class="bar-lbl">اثن</div></div>
+              <div class="bar-col"><div class="bar-fill" style="background:var(--blue2);height:78%"></div><div class="bar-lbl">ثلا</div></div>
+              <div class="bar-col"><div class="bar-fill" style="background:var(--blue2);height:55%"></div><div class="bar-lbl">أرب</div></div>
+              <div class="bar-col"><div class="bar-fill" style="background:var(--teal);height:88%"></div><div class="bar-lbl">خمي</div></div>
+              <div class="bar-col"><div class="bar-fill" style="background:var(--gold);height:40%"></div><div class="bar-lbl">اليوم</div></div>
+            </div>
+          </div>
+          <div style="flex:1">
+            <div style="font-size:11px;color:var(--text3);margin-bottom:6px">صادرة</div>
+            <div class="chart-bars" style="height:80px">
+              <div class="bar-col"><div class="bar-fill" style="background:var(--teal);height:40%"></div><div class="bar-lbl">سبت</div></div>
+              <div class="bar-col"><div class="bar-fill" style="background:var(--teal);height:58%"></div><div class="bar-lbl">أحد</div></div>
+              <div class="bar-col"><div class="bar-fill" style="background:var(--teal);height:35%"></div><div class="bar-lbl">اثن</div></div>
+              <div class="bar-col"><div class="bar-fill" style="background:var(--teal);height:72%"></div><div class="bar-lbl">ثلا</div></div>
+              <div class="bar-col"><div class="bar-fill" style="background:var(--teal);height:50%"></div><div class="bar-lbl">أرب</div></div>
+              <div class="bar-col"><div class="bar-fill" style="background:var(--teal);height:82%"></div><div class="bar-lbl">خمي</div></div>
+              <div class="bar-col"><div class="bar-fill" style="background:var(--gold);height:20%"></div><div class="bar-lbl">اليوم</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════ INTAKE ════ -->
+    <div id="view-intake" class="page-view" style="display:none">
+      <div class="hero-strip" style="background:linear-gradient(135deg,var(--navy),var(--purple))">
+        <div class="hero-ico"><i class="ti ti-inbox"></i></div>
+        <div><h2>استلام الطرود</h2><p>48 طرد وارد اليوم · 31 بانتظار المسح</p></div>
+        <div class="hero-actions">
+          <button class="hbtn hbtn-ghost" onclick="toast('طباعة قائمة الاستلام…','info')"><i class="ti ti-printer"></i>طباعة القائمة</button>
+          <button class="hbtn hbtn-prim" onclick="showView('scan',null);setActive('scan')"><i class="ti ti-qrcode"></i>بدء المسح</button>
+        </div>
+      </div>
+      <div class="stats-row">
+        <div class="stat-card"><div class="stat-accent" style="background:var(--blue2)"></div><div class="stat-lbl"><i class="ti ti-package"></i>إجمالي الواردة</div><div class="stat-val">48</div></div>
+        <div class="stat-card"><div class="stat-accent" style="background:var(--teal)"></div><div class="stat-lbl"><i class="ti ti-circle-check"></i>تم معالجتها</div><div class="stat-val">17</div></div>
+        <div class="stat-card"><div class="stat-accent" style="background:var(--gold)"></div><div class="stat-lbl"><i class="ti ti-clock"></i>انتظار المسح</div><div class="stat-val">31</div></div>
+        <div class="stat-card"><div class="stat-accent" style="background:var(--danger)"></div><div class="stat-lbl"><i class="ti ti-alert-triangle"></i>تحتاج تحقق</div><div class="stat-val">3</div></div>
+      </div>
+      <div class="card">
+        <div class="card-hd">
+          <span class="card-title">قائمة الاستلام التفصيلية</span>
+          <div style="display:flex;gap:8px">
+            <select class="form-select" style="width:130px;padding:5px 8px;font-size:12px"><option>كل الحالات</option><option>تم</option><option>انتظار مسح</option><option>تحتاج تحقق</option></select>
+            <button class="tb-btn tb-btn-prim" onclick="toast('تم تصدير القائمة بصيغة Excel','success')"><i class="ti ti-download"></i>تصدير</button>
+          </div>
+        </div>
+        <div class="tbl-scroll"><table class="tbl">
+          <thead><tr><th>الباركود</th><th>التاجر</th><th>المستلم</th><th>الوزن</th><th>COD</th><th>الصينية</th><th>وقت الوصول</th><th>الحالة</th><th>إجراء</th></tr></thead>
+          <tbody>
+            <tr><td class="tbl-mono">TW-7701</td><td>متجر الأناقة</td><td>محمد رضا</td><td>1.2 كجم</td><td>350 EGP</td><td><b class="tbl-mono">A3</b></td><td style="font-size:11px;color:var(--text3)">08:15</td><td><span class="chip chip-green">تم</span></td><td><button class="tb-btn" style="padding:3px 8px;font-size:11px" onclick="toast('تفاصيل TW-7701','info')"><i class="ti ti-eye"></i></button></td></tr>
+            <tr><td class="tbl-mono">TW-7702</td><td>تك ستور</td><td>سارة خليل</td><td>0.8 كجم</td><td>180 EGP</td><td><span style="color:var(--text3)">—</span></td><td style="font-size:11px;color:var(--text3)">08:32</td><td><span class="chip chip-blue">انتظار</span></td><td><button class="tb-btn tb-btn-teal" style="padding:3px 8px;font-size:11px" onclick="assignBin('TW-7702')">تخصيص</button></td></tr>
+            <tr><td class="tbl-mono">TW-7703</td><td>بوتيك ريم</td><td>علي حسن</td><td>2.1 كجم</td><td>420 EGP</td><td><b class="tbl-mono">B5</b></td><td style="font-size:11px;color:var(--text3)">08:45</td><td><span class="chip chip-green">تم</span></td><td><button class="tb-btn" style="padding:3px 8px;font-size:11px"><i class="ti ti-eye"></i></button></td></tr>
+            <tr><td class="tbl-mono">TW-7704</td><td>فريش ماركت</td><td>نورا أحمد</td><td>3.5 كجم</td><td>—</td><td><span style="color:var(--text3)">—</span></td><td style="font-size:11px;color:var(--text3)">09:02</td><td><span class="chip chip-amber">تحقق</span></td><td><button class="tb-btn" style="padding:3px 8px;font-size:11px;color:var(--danger)" onclick="toast('تم إرسال تنبيه للتاجر','info')"><i class="ti ti-alert-triangle"></i></button></td></tr>
+            <tr><td class="tbl-mono">TW-7705</td><td>Digital Hub</td><td>تامر سمير</td><td>1.9 كجم</td><td>650 EGP</td><td><span style="color:var(--text3)">—</span></td><td style="font-size:11px;color:var(--text3)">09:20</td><td><span class="chip chip-blue">انتظار</span></td><td><button class="tb-btn tb-btn-teal" style="padding:3px 8px;font-size:11px" onclick="assignBin('TW-7705')">تخصيص</button></td></tr>
+            <tr><td class="tbl-mono">TW-7706</td><td>متجر الأناقة</td><td>هناء فوزي</td><td>0.6 كجم</td><td>290 EGP</td><td><b class="tbl-mono">C2</b></td><td style="font-size:11px;color:var(--text3)">09:35</td><td><span class="chip chip-green">تم</span></td><td><button class="tb-btn" style="padding:3px 8px;font-size:11px"><i class="ti ti-eye"></i></button></td></tr>
+            <tr><td class="tbl-mono">TW-7707</td><td>Elite Store</td><td>كريم ناصر</td><td>1.4 كجم</td><td>800 EGP</td><td><span style="color:var(--text3)">—</span></td><td style="font-size:11px;color:var(--text3)">09:50</td><td><span class="chip chip-amber">تحقق</span></td><td><button class="tb-btn" style="padding:3px 8px;font-size:11px;color:var(--danger)"><i class="ti ti-alert-triangle"></i></button></td></tr>
+          </tbody>
+        </table></div>
+      </div>
+    </div>
+
+    <!-- ════ SCAN ════ -->
+    <div id="view-scan" class="page-view" style="display:none">
+      <div class="hero-strip" style="background:linear-gradient(135deg,var(--navy),#1a4a8a)">
+        <div class="hero-ico"><i class="ti ti-qrcode"></i></div>
+        <div><h2>مسح الباركود</h2><p>امسح كود الطرد لتخصيص صينية تلقائيًا</p></div>
+      </div>
+      <div class="g2">
+        <div class="col">
+          <div class="card">
+            <div class="card-hd"><span class="card-title">كاميرا المسح</span><span class="chip chip-green" id="cam-status">جاهزة</span></div>
+            <div class="scan-zone scan-anim" onclick="doScan()" style="height:180px;display:flex;flex-direction:column;align-items:center;justify-content:center">
+              <i class="ti ti-qrcode" style="font-size:48px;color:var(--text3);display:block;margin-bottom:10px"></i>
+              <p style="font-weight:600;margin-bottom:4px">اضغط لتفعيل الكاميرا</p>
+              <p style="font-size:11px;color:var(--text3)">يدعم QR Code و Barcode 1D/2D</p>
+            </div>
+            <div class="divider"></div>
+            <div style="display:flex;gap:8px">
+              <input class="form-input" id="manual-barcode" placeholder="أو أدخل الكود يدويًا…" style="flex:1" onkeydown="if(event.key==='Enter')manualScan()">
+              <button class="btn-full btn-navy-full" style="width:auto;padding:8px 16px" onclick="manualScan()"><i class="ti ti-search"></i></button>
+            </div>
+          </div>
+
+          <!-- Scan result -->
+          <div class="card" id="scan-info" style="display:none">
+            <div class="card-hd"><span class="card-title">نتيجة المسح</span><span class="chip chip-teal">تم التعرف</span></div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12px;margin-bottom:14px">
+              <div style="background:var(--surf2);border-radius:5px;padding:8px"><div style="color:var(--text3);font-size:10px">رقم التتبع</div><div class="tbl-mono" style="margin-top:2px">TW-7702</div></div>
+              <div style="background:var(--surf2);border-radius:5px;padding:8px"><div style="color:var(--text3);font-size:10px">التاجر</div><div style="font-weight:500;margin-top:2px">تك ستور</div></div>
+              <div style="background:var(--surf2);border-radius:5px;padding:8px"><div style="color:var(--text3);font-size:10px">المستلم</div><div style="margin-top:2px">سارة خليل</div></div>
+              <div style="background:var(--surf2);border-radius:5px;padding:8px"><div style="color:var(--text3);font-size:10px">الوزن</div><div style="margin-top:2px">0.8 كجم</div></div>
+              <div style="background:var(--surf2);border-radius:5px;padding:8px"><div style="color:var(--text3);font-size:10px">COD</div><div style="font-weight:700;color:var(--teal2);margin-top:2px">180 EGP</div></div>
+              <div style="background:#eaf7ef;border-radius:5px;padding:8px;border:1px solid #b6e8cc"><div style="color:var(--text3);font-size:10px">الصينية المقترحة</div><div style="font-weight:800;color:var(--teal2);font-size:16px;margin-top:1px;font-family:'JetBrains Mono',monospace">A4</div></div>
+            </div>
+            <div style="display:flex;gap:8px">
+              <button class="btn-full btn-teal-full" onclick="confirmScan()"><i class="ti ti-check"></i>تأكيد A4</button>
+              <button class="btn-full btn-out" onclick="toast('يمكنك اختيار صينية مختلفة','info')"><i class="ti ti-grid-dots"></i>تغيير الصينية</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-hd"><span class="card-title">سجل المسح — اليوم</span><span class="chip chip-blue">17 طرد</span></div>
+          <table class="tbl">
+            <thead><tr><th>الوقت</th><th>الكود</th><th>الصينية</th><th>الإجراء</th></tr></thead>
+            <tbody>
+              <tr><td style="font-size:11px;color:var(--text3)">09:35</td><td class="tbl-mono">TW-7706</td><td><b class="tbl-mono" style="color:var(--teal2)">C2</b></td><td><span class="chip chip-green">تخزين</span></td></tr>
+              <tr><td style="font-size:11px;color:var(--text3)">08:45</td><td class="tbl-mono">TW-7703</td><td><b class="tbl-mono" style="color:var(--teal2)">B5</b></td><td><span class="chip chip-green">تخزين</span></td></tr>
+              <tr><td style="font-size:11px;color:var(--text3)">08:15</td><td class="tbl-mono">TW-7701</td><td><b class="tbl-mono" style="color:var(--teal2)">A3</b></td><td><span class="chip chip-green">تخزين</span></td></tr>
+              <tr><td style="font-size:11px;color:var(--text3)">08:02</td><td class="tbl-mono">TW-7698</td><td><b class="tbl-mono" style="color:var(--blue2)">D1</b></td><td><span class="chip chip-blue">شحن</span></td></tr>
+              <tr><td style="font-size:11px;color:var(--text3)">07:48</td><td class="tbl-mono">TW-7695</td><td><b class="tbl-mono" style="color:var(--blue2)">D2</b></td><td><span class="chip chip-blue">شحن</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════ BIN MAP ════ -->
+    <div id="view-binmap" class="page-view" style="display:none">
+      <div class="card" style="margin-bottom:14px">
+        <div class="card-hd">
+          <span class="card-title">خريطة الصواني التفاعلية — Hub 01</span>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+            <span style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--text3)"><span style="width:12px;height:12px;border-radius:2px;background:#eaf7ef;border:1px solid #b6e8cc;display:inline-block"></span>فارغ</span>
+            <span style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--text3)"><span style="width:12px;height:12px;border-radius:2px;background:#e3effe;border:1px solid #aaccf8;display:inline-block"></span>مشغول</span>
+            <span style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--text3)"><span style="width:12px;height:12px;border-radius:2px;background:#fef3dc;border:1px solid #f9d98a;display:inline-block"></span>محجوز</span>
+            <span style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--text3)"><span style="width:12px;height:12px;border-radius:2px;background:var(--surf3);display:inline-block"></span>معطل</span>
+            <button class="tb-btn" onclick="toast('تم تصدير خريطة الصواني','success')"><i class="ti ti-download"></i>تصدير</button>
+          </div>
+        </div>
+        <div id="full-bin-map"></div>
+        <div style="margin-top:10px;padding:10px 12px;background:var(--surf2);border-radius:var(--r-sm);font-size:12px;color:var(--text3)" id="bin-detail">← اضغط على أي صينية لعرض تفاصيلها</div>
+      </div>
+    </div>
+
+    <!-- ════ MANIFEST ════ -->
+    <div id="view-manifest" class="page-view" style="display:none">
+      <div class="hero-strip" style="background:linear-gradient(135deg,#1a4a8a,var(--purple))">
+        <div class="hero-ico"><i class="ti ti-file-text"></i></div>
+        <div><h2>بيانات الشحن (Manifest)</h2><p>توليد وطباعة بيانات شحن كل مركبة</p></div>
+        <div class="hero-actions">
+          <button class="hbtn hbtn-ghost" onclick="toast('تم تنزيل كل البيانات PDF','success')"><i class="ti ti-download"></i>تحميل الكل</button>
+          <button class="hbtn hbtn-prim" onclick="toast('جاري توليد Manifest جديد…','info')"><i class="ti ti-plus"></i>بيان جديد</button>
+        </div>
+      </div>
+      <div class="g2">
+        <div class="card">
+          <div class="card-hd"><span class="card-title">بيانات الشحن الحالية</span></div>
+          <div class="manifest-row"><div style="flex:1"><div style="font-weight:600;font-size:13px">MF-2025-0518-001</div><div style="font-size:11px;color:var(--text3)">Van-01 · خالد منصور · 15 طرد</div></div><span class="chip chip-green">مُرسَل</span><button class="tb-btn" style="padding:4px 8px;font-size:11px" onclick="toast('تم طباعة MF-001','success')"><i class="ti ti-printer"></i></button></div>
+          <div class="manifest-row"><div style="flex:1"><div style="font-weight:600;font-size:13px">MF-2025-0518-002</div><div style="font-size:11px;color:var(--text3)">Van-02 · يوسف إبراهيم · 12 طرد</div></div><span class="chip chip-green">مُرسَل</span><button class="tb-btn" style="padding:4px 8px;font-size:11px" onclick="toast('تم طباعة MF-002','success')"><i class="ti ti-printer"></i></button></div>
+          <div class="manifest-row"><div style="flex:1"><div style="font-weight:600;font-size:13px">MF-2025-0518-003</div><div style="font-size:11px;color:var(--text3)">Van-03 · هاني سعيد · 23 طرد</div></div><span class="chip chip-amber">مسودة</span><button class="tb-btn tb-btn-teal" style="padding:4px 8px;font-size:11px" onclick="toast('تم توليد MF-003 وطباعته','success')"><i class="ti ti-check"></i>توليد</button></div>
+        </div>
+        <div class="card">
+          <div class="card-hd"><span class="card-title">محتوى MF-003 — Van-03</span></div>
+          <table class="tbl">
+            <thead><tr><th>التتبع</th><th>المستلم</th><th>المنطقة</th><th>COD</th></tr></thead>
+            <tbody>
+              <tr><td class="tbl-mono">TW-9901</td><td>محمد رضا</td><td>المعادي</td><td>350</td></tr>
+              <tr><td class="tbl-mono">TW-9902</td><td>سارة خليل</td><td>مصر الجديدة</td><td>180</td></tr>
+              <tr><td class="tbl-mono">TW-9903</td><td>علي حسن</td><td>الهرم</td><td>420</td></tr>
+              <tr><td class="tbl-mono">TW-9904</td><td>نورا أحمد</td><td>وسط البلد</td><td>—</td></tr>
+              <tr><td class="tbl-mono">TW-9905</td><td>تامر سمير</td><td>نصر سيتي</td><td>650</td></tr>
+            </tbody>
+          </table>
+          <div class="divider"></div>
+          <div style="display:flex;justify-content:space-between;font-size:12.5px"><span style="color:var(--text3)">إجمالي COD</span><b style="color:var(--teal2)">1,600 EGP</b></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════ DISPATCH ════ -->
+    <div id="view-dispatch" class="page-view" style="display:none">
+      <div class="hero-strip" style="background:linear-gradient(135deg,var(--teal2),var(--blue))">
+        <div class="hero-ico"><i class="ti ti-truck"></i></div>
+        <div><h2>تحميل المركبات</h2><p>3 مركبات جاهزة للتحميل · 50 طرد إجمالًا</p></div>
+      </div>
+      <div class="g2">
+        <div class="col">
+          <div class="vehicle-card loading">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+              <div><div class="vehicle-plate">VAN-01</div><div class="vehicle-meta">خالد منصور · دايو ماتيز · 15 طرد</div></div>
+              <span class="chip chip-blue">جارٍ التحميل</span>
+            </div>
+            <div class="load-prog">
+              <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text3);margin-bottom:3px"><span>التحميل</span><span>9 / 15</span></div>
+              <div class="prog"><div class="prog-fill pf-blue" style="width:60%"></div></div>
+            </div>
+          </div>
+          <div class="vehicle-card">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+              <div><div class="vehicle-plate">VAN-02</div><div class="vehicle-meta">يوسف إبراهيم · هيونداي H1 · 12 طرد</div></div>
+              <span class="chip chip-amber">انتظار</span>
+            </div>
+            <div class="load-prog">
+              <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text3);margin-bottom:3px"><span>التحميل</span><span>0 / 12</span></div>
+              <div class="prog"><div class="prog-fill pf-teal" style="width:0%"></div></div>
+            </div>
+          </div>
+          <div class="vehicle-card">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+              <div><div class="vehicle-plate">VAN-03</div><div class="vehicle-meta">هاني سعيد · كيا بيكانتو · 23 طرد</div></div>
+              <span class="chip chip-amber">انتظار</span>
+            </div>
+            <div class="load-prog">
+              <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text3);margin-bottom:3px"><span>التحميل</span><span>0 / 23</span></div>
+              <div class="prog"><div class="prog-fill pf-teal" style="width:0%"></div></div>
+            </div>
+          </div>
+          <button class="btn-full btn-teal-full" onclick="toast('تم بدء تحميل VAN-02','success')"><i class="ti ti-truck"></i>بدء تحميل VAN-02</button>
+        </div>
+        <div class="card">
+          <div class="card-hd"><span class="card-title">طرود VAN-01 — تفاصيل التحميل</span></div>
+          <table class="tbl">
+            <thead><tr><th>الطرد</th><th>الصينية</th><th>المنطقة</th><th>الوزن</th><th>حُمِّل</th></tr></thead>
+            <tbody>
+              <tr><td class="tbl-mono">TW-9901</td><td><b class="tbl-mono">A3</b></td><td>المعادي</td><td>1.2 كجم</td><td><i class="ti ti-circle-check" style="color:var(--teal2);font-size:16px"></i></td></tr>
+              <tr><td class="tbl-mono">TW-9902</td><td><b class="tbl-mono">A4</b></td><td>مصر الجديدة</td><td>0.8 كجم</td><td><i class="ti ti-circle-check" style="color:var(--teal2);font-size:16px"></i></td></tr>
+              <tr><td class="tbl-mono">TW-9903</td><td><b class="tbl-mono">B5</b></td><td>الهرم</td><td>2.1 كجم</td><td><i class="ti ti-circle-check" style="color:var(--teal2);font-size:16px"></i></td></tr>
+              <tr><td class="tbl-mono">TW-9904</td><td><b class="tbl-mono">C2</b></td><td>وسط البلد</td><td>0.5 كجم</td><td><i class="ti ti-circle-check" style="color:var(--teal2);font-size:16px"></i></td></tr>
+              <tr><td class="tbl-mono">TW-9905</td><td><span style="color:var(--text3)">—</span></td><td>نصر سيتي</td><td>3.1 كجم</td><td><i class="ti ti-circle" style="color:var(--text3);font-size:16px"></i></td></tr>
+              <tr><td class="tbl-mono">TW-9906</td><td><span style="color:var(--text3)">—</span></td><td>الرحاب</td><td>1.4 كجم</td><td><i class="ti ti-circle" style="color:var(--text3);font-size:16px"></i></td></tr>
+            </tbody>
+          </table>
+          <div class="divider"></div>
+          <button class="btn-full btn-navy-full" onclick="toast('تم الإبلاغ عن اكتمال تحميل VAN-01','success')"><i class="ti ti-check"></i>تأكيد اكتمال التحميل</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════ LABELS ════ -->
+    <div id="view-labels" class="page-view" style="display:none">
+      <div class="hero-strip">
+        <div class="hero-ico"><i class="ti ti-printer"></i></div>
+        <div><h2>طباعة الملصقات</h2><p>طباعة ملصقات QR لكل الطرود الجاهزة</p></div>
+        <div class="hero-actions">
+          <button class="hbtn hbtn-prim" onclick="toast('جاري إرسال 23 ملصق للطابعة…','success')"><i class="ti ti-printer"></i>طباعة الكل (23)</button>
+        </div>
+      </div>
+      <div class="g2">
+        <div class="card">
+          <div class="card-hd"><span class="card-title">إعدادات الطباعة</span></div>
+          <div class="form-field" style="margin-bottom:10px"><label class="form-label">الطابعة</label><select class="form-select"><option>Zebra ZT230 — Aisle A</option><option>Brother QL-820 — Aisle B</option></select></div>
+          <div class="form-field" style="margin-bottom:10px"><label class="form-label">حجم الملصق</label><select class="form-select"><option>100×150mm (A6)</option><option>75×100mm</option><option>50×75mm</option></select></div>
+          <div class="form-field" style="margin-bottom:14px"><label class="form-label">عدد النسخ</label><input class="form-input" type="number" value="1"></div>
+          <button class="btn-full btn-navy-full" onclick="toast('تم إرسال الأمر للطابعة','success')"><i class="ti ti-printer"></i>طباعة</button>
+        </div>
+        <div class="card">
+          <div class="card-hd"><span class="card-title">معاينة الملصق</span></div>
+          <div style="border:1px solid var(--bdr2);border-radius:var(--r-sm);padding:16px;text-align:center;background:var(--surf2)">
+            <div style="font-size:10px;color:var(--text3);margin-bottom:8px">TWSELA COURIER</div>
+            <div style="width:80px;height:80px;background:var(--navy);border-radius:6px;margin:0 auto 10px;display:flex;align-items:center;justify-content:center;font-size:40px">▦</div>
+            <div style="font-family:'JetBrains Mono',monospace;font-size:16px;font-weight:700;letter-spacing:2px;margin-bottom:6px">TW-7702</div>
+            <div style="font-size:11px;margin-bottom:3px">المستلم: <b>سارة خليل</b></div>
+            <div style="font-size:10px;color:var(--text3)">مصر الجديدة · كورنيش النيل</div>
+            <div style="margin-top:8px;background:var(--teal);color:var(--navy);border-radius:4px;padding:3px 8px;font-size:10px;font-weight:700;display:inline-block">COD: 180 EGP</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════ INVENTORY ════ -->
+    <div id="view-inventory" class="page-view" style="display:none">
+      <div class="stats-row">
+        <div class="stat-card"><div class="stat-accent" style="background:var(--blue2)"></div><div class="stat-lbl"><i class="ti ti-package"></i>إجمالي المخزون</div><div class="stat-val">187</div></div>
+        <div class="stat-card"><div class="stat-accent" style="background:var(--teal)"></div><div class="stat-lbl"><i class="ti ti-clock"></i>أقل من 24 ساعة</div><div class="stat-val">48</div></div>
+        <div class="stat-card"><div class="stat-accent" style="background:var(--gold)"></div><div class="stat-lbl"><i class="ti ti-calendar"></i>1-3 أيام</div><div class="stat-val">112</div></div>
+        <div class="stat-card"><div class="stat-accent" style="background:var(--danger)"></div><div class="stat-lbl"><i class="ti ti-alert-triangle"></i>تجاوز SLA</div><div class="stat-val">27</div></div>
+      </div>
+      <div class="card">
+        <div class="card-hd"><span class="card-title">جرد المخزون التفصيلي</span><button class="tb-btn tb-btn-prim" onclick="toast('تم تصدير الجرد Excel','success')"><i class="ti ti-download"></i>تصدير</button></div>
+        <div class="tbl-scroll"><table class="tbl">
+          <thead><tr><th>التتبع</th><th>التاجر</th><th>الصينية</th><th>المستلم</th><th>المنطقة</th><th>COD</th><th>دخل المستودع</th><th>SLA</th><th>الحالة</th></tr></thead>
+          <tbody>
+            <tr><td class="tbl-mono">TW-7706</td><td>متجر الأناقة</td><td><b class="tbl-mono">C2</b></td><td>هناء فوزي</td><td>بني سويف</td><td>290</td><td>08:00</td><td style="color:var(--teal2)">✓ ضمن الحد</td><td><span class="chip chip-blue">جاهز</span></td></tr>
+            <tr><td class="tbl-mono">TW-7703</td><td>بوتيك ريم</td><td><b class="tbl-mono">B5</b></td><td>علي حسن</td><td>الإسكندرية</td><td>420</td><td>08:45</td><td style="color:var(--teal2)">✓ ضمن الحد</td><td><span class="chip chip-blue">جاهز</span></td></tr>
+            <tr><td class="tbl-mono">TW-7701</td><td>متجر الأناقة</td><td><b class="tbl-mono">A3</b></td><td>محمد رضا</td><td>المعادي</td><td>350</td><td>08:15</td><td style="color:var(--teal2)">✓ ضمن الحد</td><td><span class="chip chip-teal">محمَّل</span></td></tr>
+            <tr><td class="tbl-mono">TW-7690</td><td>تك ستور</td><td><b class="tbl-mono">D4</b></td><td>أيمن جلال</td><td>الجيزة</td><td>540</td><td>أمس 18:00</td><td style="color:var(--danger)">⚠ تجاوز SLA</td><td><span class="chip chip-red">متأخر</span></td></tr>
+          </tbody>
+        </table></div>
+      </div>
+    </div>
+
+    <!-- ════ RETURNS ════ -->
+    <div id="view-returns" class="page-view" style="display:none">
+      <div class="hero-strip" style="background:linear-gradient(135deg,#4a1d96,var(--danger))">
+        <div class="hero-ico"><i class="ti ti-rotate-2"></i></div>
+        <div><h2>الشحنات المُعادة</h2><p>12 شحنة مُعادة · تحتاج إجراء من التاجر</p></div>
+      </div>
+      <div class="card">
+        <div class="card-hd"><span class="card-title">قائمة الإعادة</span><button class="tb-btn tb-btn-prim" onclick="toast('تم إشعار كل التجار','success')"><i class="ti ti-send"></i>إشعار التجار</button></div>
+        <div class="tbl-scroll"><table class="tbl">
+          <thead><tr><th>التتبع</th><th>التاجر</th><th>المستلم</th><th>سبب الإعادة</th><th>COD</th><th>تاريخ الإعادة</th><th>الإجراء</th></tr></thead>
+          <tbody>
+            <tr><td class="tbl-mono">TW-9890</td><td>متجر الأناقة</td><td>ريم طه</td><td>العميل غير متواجد (3×)</td><td>—</td><td>اليوم 11:00</td><td><span class="chip chip-amber">انتظار التاجر</span></td></tr>
+            <tr><td class="tbl-mono">TW-9885</td><td>تك ستور</td><td>سامر حلمي</td><td>رفض الاستلام</td><td>280 EGP</td><td>اليوم 09:30</td><td><span class="chip chip-amber">انتظار التاجر</span></td></tr>
+            <tr><td class="tbl-mono">TW-9880</td><td>بوتيك ريم</td><td>نهى مراد</td><td>عنوان خاطئ</td><td>150 EGP</td><td>أمس</td><td><span class="chip chip-blue">جاري التحقق</span></td></tr>
+            <tr><td class="tbl-mono">TW-9875</td><td>فريش ماركت</td><td>كمال صادق</td><td>لا يرد على الهاتف</td><td>400 EGP</td><td>أمس</td><td><button class="tb-btn tb-btn-teal" style="padding:3px 10px;font-size:11px" onclick="toast('تم جدولة محاولة ثانية','success')">إعادة جدولة</button></td></tr>
+          </tbody>
+        </table></div>
+      </div>
+    </div>
+
+    <!-- ════ DAILY REPORT ════ -->
+    <div id="view-daily" class="page-view" style="display:none">
+      <div class="hero-strip">
+        <div class="hero-ico"><i class="ti ti-chart-bar"></i></div>
+        <div><h2>تقرير اليوم — Hub 01</h2><p>الأحد 18 مايو 2025 · ملخص كامل</p></div>
+        <div class="hero-actions">
+          <button class="hbtn hbtn-ghost" onclick="toast('تم تنزيل التقرير PDF','success')"><i class="ti ti-download"></i>PDF</button>
+          <button class="hbtn hbtn-prim" onclick="toast('تم إرسال التقرير للAdmin','success')"><i class="ti ti-send"></i>إرسال للAdmin</button>
+        </div>
+      </div>
+      <div class="g2">
+        <div class="card">
+          <div class="card-hd"><span class="card-title">ملخص العمليات</span></div>
+          <div style="display:flex;flex-direction:column;gap:8px;font-size:12.5px">
+            <div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--bdr)"><span style="color:var(--text3)">طرود واردة</span><b>48</b></div>
+            <div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--bdr)"><span style="color:var(--text3)">طرود مُعالجة</span><b style="color:var(--teal2)">17</b></div>
+            <div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--bdr)"><span style="color:var(--text3)">طرود شُحنت</span><b>27</b></div>
+            <div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--bdr)"><span style="color:var(--text3)">طرود مُعادة</span><b style="color:var(--danger)">12</b></div>
+            <div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--bdr)"><span style="color:var(--text3)">مركبات شُحنت</span><b>2</b></div>
+            <div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--bdr)"><span style="color:var(--text3)">ملصقات مطبوعة</span><b>39</b></div>
+            <div style="display:flex;justify-content:space-between;padding:7px 0"><span style="color:var(--text3)">COD إجمالي الشحن</span><b style="color:var(--teal2)">28,400 EGP</b></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-hd"><span class="card-title">أداء الفريق</span></div>
+          <table class="tbl">
+            <thead><tr><th>الموظف</th><th>الوظيفة</th><th>طرود عولجت</th><th>الكفاءة</th></tr></thead>
+            <tbody>
+              <tr><td>أحمد الطيب</td><td>استلام</td><td>17</td><td style="color:var(--teal2)">95%</td></tr>
+              <tr><td>محمود سالم</td><td>فرز</td><td>32</td><td style="color:var(--teal2)">92%</td></tr>
+              <tr><td>عبدالله رشاد</td><td>تحميل</td><td>27</td><td style="color:var(--gold)">88%</td></tr>
+            </tbody>
+          </table>
+          <div class="divider"></div>
+          <div style="font-size:12px;display:flex;justify-content:space-between;color:var(--text3)"><span>متوسط وقت معالجة الطرد</span><b style="color:var(--text)">4.2 دقيقة</b></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════ SETTINGS ════ -->
+    <div id="view-settings" class="page-view" style="display:none">
+      <div class="g2">
+        <div class="card">
+          <div class="card-hd"><span class="card-title">إعدادات المستودع</span></div>
+          <div class="form-field" style="margin-bottom:10px"><label class="form-label">اسم المستودع</label><input class="form-input" value="Hub 01 — القاهرة الرئيسي"></div>
+          <div class="form-field" style="margin-bottom:10px"><label class="form-label">العنوان</label><input class="form-input" value="المنطقة الصناعية، ميدان التحرير، القاهرة"></div>
+          <div class="form-field" style="margin-bottom:10px"><label class="form-label">الطاقة القصوى (طرد)</label><input class="form-input" type="number" value="480"></div>
+          <div class="form-field" style="margin-bottom:10px"><label class="form-label">تنبيه الطاقة عند (%)</label><input class="form-input" type="number" value="80"></div>
+          <div class="form-field" style="margin-bottom:14px"><label class="form-label">SLA الافتراضي (ساعة)</label><input class="form-input" type="number" value="24"></div>
+          <button class="btn-full btn-navy-full" onclick="toast('تم حفظ إعدادات المستودع','success')"><i class="ti ti-device-floppy"></i>حفظ</button>
+        </div>
+        <div class="card">
+          <div class="card-hd"><span class="card-title">حالة الأجهزة</span></div>
+          <div style="display:flex;flex-direction:column;gap:8px;font-size:12.5px">
+            <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--bdr)"><span><i class="ti ti-printer" style="color:var(--blue2);margin-left:6px"></i>Zebra ZT230 — A</span><span class="chip chip-green">متصلة</span></div>
+            <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--bdr)"><span><i class="ti ti-printer" style="color:var(--blue2);margin-left:6px"></i>Brother QL-820 — B</span><span class="chip chip-green">متصلة</span></div>
+            <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--bdr)"><span><i class="ti ti-qrcode" style="color:var(--teal2);margin-left:6px"></i>Barcode Scanner #1</span><span class="chip chip-green">نشط</span></div>
+            <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--bdr)"><span><i class="ti ti-qrcode" style="color:var(--teal2);margin-left:6px"></i>Barcode Scanner #2</span><span class="chip chip-amber">بطارية منخفضة</span></div>
+            <div style="display:flex;justify-content:space-between;padding:8px 0"><span><i class="ti ti-wifi" style="color:var(--navy);margin-left:6px"></i>شبكة Wi-Fi المستودع</span><span class="chip chip-green">-42 dBm</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- LOST placeholder -->
+    <div id="view-lost" class="page-view" style="display:none">
+      <div class="hero-strip" style="background:linear-gradient(135deg,#7a1818,var(--danger))">
+        <div class="hero-ico"><i class="ti ti-alert-triangle"></i></div>
+        <div><h2>الطرود المفقودة / التالفة</h2><p>0 حالة مفتوحة حاليًا</p></div>
+      </div>
+      <div class="card"><div class="empty"><i class="ti ti-package-off"></i><p>لا توجد حالات مفقودة أو تالفة</p></div></div>
+    </div>
+
+    <!-- SORT placeholder -->
+    <div id="view-sort" class="page-view" style="display:none">
+      <div class="hero-strip">
+        <div class="hero-ico"><i class="ti ti-arrows-sort"></i></div>
+        <div><h2>الفرز والتصنيف</h2><p>تصنيف الطرود حسب المنطقة والمركبة</p></div>
+      </div>
+      <div class="card"><div class="empty"><i class="ti ti-arrows-sort"></i><p>واجهة الفرز الذكي — تصنيف تلقائي حسب المسار والمنطقة</p></div></div>
+    </div>
+
+  </div>
+</div>
+</div>
+
+<!-- Bin tooltip -->
+<div class="bin-tooltip" id="bin-tooltip"></div>
+<div class="toast-wrap" id="toasts"></div>
+
+<script>
+/* ── View routing ── */
+const titles={overview:'نظرة عامة — Warehouse',intake:'استلام الطرود',scan:'مسح الباركود',binmap:'خريطة الصواني',sort:'الفرز والتصنيف',manifest:'بيانات الشحن',dispatch:'تحميل المركبات',labels:'طباعة الملصقات',inventory:'المخزون',returns:'الشحنات المُعادة',lost:'مفقود / تالف',daily:'تقرير اليوم',settings:'إعدادات المستودع'};
+function showView(id,btn){
+  document.querySelectorAll('.page-view').forEach(v=>v.style.display='none');
+  const el=document.getElementById('view-'+id);
+  if(el)el.style.display='block';
+  if(btn){document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));btn.classList.add('active');}
+  document.getElementById('tb-title').textContent=titles[id]||id;
+  if(id==='binmap')renderFullBinMap();
+}
+function setActive(id){document.querySelectorAll('.nav-item').forEach(b=>{if(b.getAttribute('onclick')?.includes(`'${id}'`)){b.classList.add('active');}else b.classList.remove('active');});}
+
+/* ── Bin Map ── */
+const AISLES=['A','B','C','D','E','F'];
+const BINS_PER=10;
+function binState(){
+  const s={};
+  AISLES.forEach(a=>{
+    for(let i=1;i<=BINS_PER;i++){
+      const k=a+i;
+      const r=Math.random();
+      s[k]=r<.38?'used':r<.52?'held':r<.58?'broken':'free';
+    }
+  });
+  // Fixed ones for demo
+  s['A3']='used';s['A4']='free';s['B5']='used';s['C2']='used';s['D1']='broken';
+  return s;
+}
+const BS=binState();
+
+function renderBinGrid(containerId,cols=10,showAisle=true){
+  const c=document.getElementById(containerId);if(!c)return;
+  c.innerHTML='';
+  AISLES.forEach(a=>{
+    if(showAisle){
+      const lbl=document.createElement('div');
+      lbl.className='bin-section';
+      const tl=document.createElement('div');tl.className='bin-section-title';tl.textContent=`Aisle ${a}`;lbl.appendChild(tl);
+      const grid=document.createElement('div');
+      grid.className=cols===10?'bin-grid-lg':'bin-grid';
+      for(let i=1;i<=BINS_PER;i++){
+        const key=a+i;
+        const b=document.createElement('div');
+        b.className='bin-lg bin-'+BS[key];
+        b.textContent=key;
+        b.addEventListener('click',()=>binClick(key));
+        b.addEventListener('mouseenter',e=>showBinTooltip(e,key));
+        b.addEventListener('mouseleave',()=>{document.getElementById('bin-tooltip').style.display='none';});
+        grid.appendChild(b);
+      }
+      lbl.appendChild(grid);c.appendChild(lbl);
+    }
+  });
+}
+
+function renderMiniPreview(){
+  const c=document.getElementById('mini-bin-grid');if(!c)return;
+  const grid=document.createElement('div');
+  grid.style.cssText='display:grid;grid-template-columns:repeat(20,1fr);gap:3px';
+  AISLES.forEach(a=>{
+    for(let i=1;i<=BINS_PER;i++){
+      const b=document.createElement('div');
+      b.style.cssText=`height:16px;border-radius:2px;cursor:pointer;`;
+      const st=BS[a+i];
+      const clr={free:'#eaf7ef',used:'#e3effe',held:'#fef3dc',broken:'#edf0f5'}[st];
+      b.style.background=clr;
+      b.title=a+i+' — '+{free:'فارغ',used:'مشغول',held:'محجوز',broken:'معطل'}[st];
+      grid.appendChild(b);
+    }
+  });
+  c.appendChild(grid);
+}
+
+function renderFullBinMap(){
+  renderBinGrid('full-bin-map',10,true);
+}
+
+function binClick(key){
+  const st=BS[key];
+  const stAr={free:'فارغ',used:'مشغول — يحتوي على طرد',held:'محجوز',broken:'معطل'}[st];
+  const chip={free:'chip-green',used:'chip-blue',held:'chip-amber',broken:'chip-gray'}[st];
+  document.getElementById('bin-detail').innerHTML=
+    `<b class="tbl-mono">${key}</b> — الحالة: <span class="chip ${chip}" style="height:18px;font-size:10px">${stAr}</span>`+
+    (st==='used'?` · الطرد: <span class="tbl-mono">TW-77${Math.floor(Math.random()*99).toString().padStart(2,'0')}</span>`:'');
+  toast(`تم اختيار الصينية ${key}`,st==='free'?'success':'info');
+}
+
+function showBinTooltip(e,key){
+  const t=document.getElementById('bin-tooltip');
+  const st=BS[key];
+  const stAr={free:'فارغ',used:'مشغول',held:'محجوز',broken:'معطل'}[st];
+  t.textContent=`${key} — ${stAr}`;
+  t.style.display='block';
+  t.style.top=(e.clientY-36)+'px';
+  t.style.left=(e.clientX-t.offsetWidth/2)+'px';
+}
+
+/* ── Scan simulation ── */
+function doScan(){
+  document.getElementById('cam-status').textContent='تعرَّف على الطرد';
+  document.getElementById('cam-status').className='chip chip-teal';
+  document.getElementById('scan-info').style.display='block';
+  toast('تم مسح TW-7702 بنجاح','success');
+}
+function manualScan(){
+  const v=document.getElementById('manual-barcode').value.trim();
+  if(!v){toast('أدخل رقم التتبع','error');return;}
+  document.getElementById('scan-info').style.display='block';
+  document.getElementById('scan-info').querySelector('.card-title + .chip').textContent='تعرَّف على '+v;
+  toast('تم العثور على '+v,'success');
+}
+function confirmScan(){toast('تم تخصيص الصينية A4 للطرد TW-7702 ✓','success');document.getElementById('scan-info').style.display='none';}
+
+function assignBin(code){toast(`تم تخصيص صينية A4 تلقائيًا لـ ${code}`,'success');}
+
+/* ── Clock ── */
+function tick(){
+  const n=new Date();
+  const s=n.toLocaleTimeString('ar-EG');
+  document.getElementById('clock').textContent=s;
+  const w=document.getElementById('wh-clock');
+  if(w)w.textContent=s;
+}
+tick();setInterval(tick,1000);
+
+/* ── Toast ── */
+function toast(msg,type='info'){
+  const w=document.getElementById('toasts');const t=document.createElement('div');
+  t.className=`toast toast-${type}`;
+  t.innerHTML=`<i class="ti ti-${type==='success'?'circle-check':type==='error'?'circle-x':'info-circle'}"></i>${msg}`;
+  w.appendChild(t);setTimeout(()=>t.remove(),3200);
+}
+
+/* ── Init ── */
+renderMiniPreview();
+</script>
+</body>
+</html>

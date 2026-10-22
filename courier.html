@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>توصيلة — Courier Portal</title>
+<link rel="stylesheet" href="portal.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.4.0/dist/tabler-icons.min.css">
+<style>
+.route-connector{position:relative;padding-right:28px}
+.route-connector::before{content:'';position:absolute;right:11px;top:0;bottom:0;width:2px;background:var(--bdr2)}
+.stop-wrap{position:relative;margin-bottom:4px}
+.stop-wrap::before{display:none}
+.shift-hero{background:linear-gradient(135deg,#07213d,#1358a5);border-radius:var(--r);padding:20px 22px;color:#fff;margin-bottom:16px}
+.shift-time{font-size:36px;font-weight:700;line-height:1;margin-bottom:4px;font-variant-numeric:tabular-nums}
+.shift-meta{font-size:12px;opacity:.6}
+.shift-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:16px}
+.shift-stat{background:rgba(255,255,255,.08);border-radius:8px;padding:10px;text-align:center}
+.shift-stat-val{font-size:20px;font-weight:700}
+.shift-stat-lbl{font-size:10px;opacity:.55;margin-top:2px}
+.pod-box{border:2px dashed var(--bdr2);border-radius:var(--r);padding:20px;text-align:center;cursor:pointer;transition:all .15s}
+.pod-box:hover{border-color:var(--blue2);background:#f0f5fb}
+.pod-box i{font-size:32px;color:var(--text3);display:block;margin-bottom:8px}
+.sig-canvas{width:100%;height:160px;background:var(--surf2);border:1.5px solid var(--bdr2);border-radius:var(--r-sm);cursor:crosshair;display:block}
+.earnings-day{background:linear-gradient(135deg,var(--teal2),var(--teal));border-radius:var(--r);padding:18px 20px;color:#fff;margin-bottom:14px}
+.earnings-val{font-size:30px;font-weight:700;margin:6px 0}
+.earn-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--bdr);font-size:12.5px}
+.earn-row:last-child{border-bottom:none}
+.earn-row i{font-size:16px;flex-shrink:0}
+.earn-desc{flex:1}
+.earn-amount{font-weight:600}
+.rating-stars{display:flex;gap:6px;margin:12px 0}
+.star-btn{font-size:28px;cursor:pointer;transition:transform .1s;color:#d1d5db}
+.star-btn.lit{color:var(--gold)}
+.star-btn:hover{transform:scale(1.15)}
+.issue-type{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
+.issue-opt{padding:10px;border:1.5px solid var(--bdr2);border-radius:var(--r-sm);text-align:center;cursor:pointer;font-size:12px;transition:all .15s}
+.issue-opt:hover,.issue-opt.sel{border-color:var(--blue2);background:#eaf0fb;color:var(--blue)}
+.issue-opt i{display:block;font-size:20px;margin-bottom:5px}
+.scan-result{background:var(--surf2);border:1px solid var(--bdr2);border-radius:var(--r-sm);padding:14px;margin-top:12px;display:none}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- ══ SIDEBAR ══ -->
+<aside class="sidebar">
+  <div class="sb-logo">
+    <div class="sb-logo-icon">ت</div>
+    <div><div class="sb-logo-name">توصيلة</div><div class="sb-logo-sub">Courier Portal</div></div>
+  </div>
+  <div class="sb-portal-badge">
+    <i class="ti ti-bike" style="color:var(--gold);font-size:18px"></i>
+    <div><div class="sb-portal-badge-name">خالد منصور</div><div class="sb-portal-badge-role">Courier · منطقة المعادي</div></div>
+    <div class="sb-portal-dot"></div>
+  </div>
+  <nav class="sb-nav">
+    <div class="nav-grp">وردية اليوم</div>
+    <button class="nav-item active" onclick="showView('shift',this)"><i class="ti ti-layout-dashboard"></i>نظرة الوردية</button>
+    <button class="nav-item" onclick="showView('route',this)"><i class="ti ti-route"></i>مساري اليوم<span class="nav-bdg bdg-blue">14</span></button>
+    <button class="nav-item" onclick="showView('scan',this)"><i class="ti ti-qrcode"></i>مسح الباركود</button>
+    <div class="nav-grp">التسليم</div>
+    <button class="nav-item" onclick="showView('deliver',this)"><i class="ti ti-circle-check"></i>تسجيل تسليم</button>
+    <button class="nav-item" onclick="showView('pod',this)"><i class="ti ti-camera"></i>إثبات التسليم (PoD)</button>
+    <button class="nav-item" onclick="showView('fail',this)"><i class="ti ti-alert-triangle"></i>محاولة فاشلة<span class="nav-bdg bdg-red">2</span></button>
+    <button class="nav-item" onclick="showView('returns',this)"><i class="ti ti-rotate-2"></i>المُعادة</button>
+    <div class="nav-grp">المالية</div>
+    <button class="nav-item" onclick="showView('cod',this)"><i class="ti ti-cash"></i>تسليم COD</button>
+    <button class="nav-item" onclick="showView('earnings',this)"><i class="ti ti-coin"></i>أرباحي</button>
+    <div class="nav-grp">الحساب</div>
+    <button class="nav-item" onclick="showView('ratings',this)"><i class="ti ti-star"></i>تقييماتي</button>
+    <button class="nav-item" onclick="showView('profile',this)"><i class="ti ti-user"></i>ملفي الشخصي</button>
+  </nav>
+  <div class="sb-footer">
+    <div class="user-row">
+      <div class="avatar" style="background:#1a70d8">KM</div>
+      <div><div class="user-name">خالد منصور</div><div class="user-meta">نشط · المعادي</div></div>
+      <i class="ti ti-logout"></i>
+    </div>
+  </div>
+</aside>
+
+<!-- ══ MAIN ══ -->
+<div class="main">
+  <div class="topbar">
+    <div class="tb-page-info">
+      <div class="tb-title" id="tb-title">نظرة الوردية</div>
+      <div class="tb-sub">خالد منصور · الأحد 18 مايو 2025 · <span id="clock" style="font-variant-numeric:tabular-nums"></span></div>
+    </div>
+    <button class="tb-btn" onclick="toast('لا إشعارات جديدة','info')"><i class="ti ti-bell"></i></button>
+    <button class="tb-btn tb-btn-teal" onclick="showView('scan',null);setActive('scan')"><i class="ti ti-qrcode"></i>مسح</button>
+    <a href="index.html" class="tb-btn" style="text-decoration:none"><i class="ti ti-home"></i></a>
+  </div>
+
+  <div class="content">
+
+    <!-- ════ SHIFT OVERVIEW ════ -->
+    <div id="view-shift" class="page-view">
+      <div class="shift-hero">
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <div>
+            <div style="font-size:12px;opacity:.6;margin-bottom:4px">ساعات الوردية</div>
+            <div class="shift-time" id="shift-timer">07:23:45</div>
+            <div class="shift-meta">بدأت الوردية 08:30 · تنتهي 16:30</div>
+          </div>
+          <div style="text-align:center">
+            <div style="font-size:11px;opacity:.5;margin-bottom:6px">تقدم الوردية</div>
+            <div style="width:80px;height:80px;border-radius:50%;border:5px solid rgba(255,255,255,.15);position:relative;display:flex;align-items:center;justify-content:center">
+              <svg style="position:absolute;top:-5px;right:-5px;transform:rotate(-90deg)" width="90" height="90"><circle cx="45" cy="45" r="38" fill="none" stroke="var(--teal)" stroke-width="5" stroke-dasharray="239" stroke-dashoffset="190" stroke-linecap="round"/></svg>
+              <div style="text-align:center"><div style="font-size:18px;font-weight:700">1</div><div style="font-size:9px;opacity:.6">/ 15</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="shift-stats">
+          <div class="shift-stat"><div class="shift-stat-val" style="color:var(--teal)">1</div><div class="shift-stat-lbl">مُسلَّم</div></div>
+          <div class="shift-stat"><div class="shift-stat-val">14</div><div class="shift-stat-lbl">متبقي</div></div>
+          <div class="shift-stat"><div class="shift-stat-val" style="color:var(--gold)">350</div><div class="shift-stat-lbl">COD (EGP)</div></div>
+          <div class="shift-stat"><div class="shift-stat-val">⭐4.9</div><div class="shift-stat-lbl">التقييم</div></div>
+        </div>
+      </div>
+
+      <div class="g2">
+        <div class="card">
+          <div class="card-hd"><span class="card-title">الوقفة التالية</span><span class="chip chip-blue">الآن</span></div>
+          <div style="background:rgba(26,112,216,.06);border:1.5px solid rgba(26,112,216,.15);border-radius:var(--r-sm);padding:14px;margin-bottom:12px">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+              <div class="stop-num current" style="width:28px;height:28px;font-size:13px">2</div>
+              <div><div style="font-size:13px;font-weight:600">كورنيش النيل، مصر الجديدة</div><div style="font-size:11px;color:var(--text3)">شارع عبد الحميد بدوي، ع. 12</div></div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12px;margin-bottom:10px">
+              <div style="background:var(--surf);border-radius:5px;padding:7px"><div style="color:var(--text3);font-size:10px">رقم التتبع</div><div class="tbl-mono" style="font-size:11px;margin-top:1px">TW-9902</div></div>
+              <div style="background:var(--surf);border-radius:5px;padding:7px"><div style="color:var(--text3);font-size:10px">COD</div><div style="font-weight:700;color:var(--teal2);margin-top:1px">250 EGP</div></div>
+              <div style="background:var(--surf);border-radius:5px;padding:7px;grid-column:span 2"><div style="color:var(--text3);font-size:10px">هاتف المستلم</div><div style="font-weight:600;margin-top:1px">01001234567</div></div>
+            </div>
+            <div style="display:flex;gap:8px">
+              <button class="btn-full btn-teal-full" onclick="showView('deliver',null);setActive('deliver')"><i class="ti ti-circle-check"></i>تسجيل تسليم</button>
+              <button class="btn-full btn-out" onclick="showView('fail',null);setActive('fail')"><i class="ti ti-x"></i>فاشل</button>
+            </div>
+          </div>
+          <div style="display:flex;gap:8px">
+            <button class="btn-full btn-navy-full" onclick="toast('جاري فتح الخريطة…','info')"><i class="ti ti-navigation"></i>توجيه GPS</button>
+            <button class="btn-full btn-out" onclick="toast('جاري الاتصال بـ 01001234567…','info')"><i class="ti ti-phone"></i>اتصال</button>
+          </div>
+        </div>
+
+        <div class="col">
+          <div class="card">
+            <div class="card-hd"><span class="card-title">ملخص COD</span></div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12.5px">
+              <div style="background:var(--surf2);border-radius:7px;padding:10px;text-align:center"><div style="font-size:18px;font-weight:700;color:var(--teal2)">350</div><div style="font-size:11px;color:var(--text3)">محصَّل (EGP)</div></div>
+              <div style="background:var(--surf2);border-radius:7px;padding:10px;text-align:center"><div style="font-size:18px;font-weight:700;color:var(--blue2)">2,490</div><div style="font-size:11px;color:var(--text3)">متبقي (EGP)</div></div>
+            </div>
+            <div class="divider"></div>
+            <div style="font-size:12px;display:flex;justify-content:space-between;color:var(--text3)"><span>إجمالي COD اليوم</span><b style="color:var(--text)">2,840 EGP</b></div>
+          </div>
+          <div class="card">
+            <div class="card-hd"><span class="card-title">حالة المسار</span></div>
+            <div style="display:flex;flex-direction:column;gap:6px;font-size:12px">
+              <div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--bdr)"><span style="color:var(--text3)">المسافة الكلية</span><b>87 كم</b></div>
+              <div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--bdr)"><span style="color:var(--text3)">المقطوعة</span><b style="color:var(--teal2)">12 كم</b></div>
+              <div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--bdr)"><span style="color:var(--text3)">وقت الانتهاء المتوقع</span><b>16:15</b></div>
+              <div style="display:flex;justify-content:space-between;padding:5px 0"><span style="color:var(--text3)">التأخر عن SLA</span><b style="color:var(--teal2)">لا يوجد</b></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════ ROUTE ════ -->
+    <div id="view-route" class="page-view" style="display:none">
+      <div class="g2">
+        <div class="card">
+          <div class="card-hd"><span class="card-title">مسار اليوم المحسَّن</span><span class="chip chip-green">87 كم · ~7.5 ساعة</span></div>
+          <div class="route-connector">
+            <!-- Stop 1 - Done -->
+            <div class="route-stop"><div class="stop-num done"><i class="ti ti-check" style="font-size:11px"></i></div><div style="flex:1"><div class="stop-addr">شارع الجمهورية، المعادي</div><div class="stop-meta">TW-9901 · تم التسليم 10:34 · COD 350 EGP ✓</div></div><span class="chip chip-green">مُسلَّم</span></div>
+            <!-- Stop 2 - Current -->
+            <div class="route-stop stop-current-row"><div class="stop-num current">2</div><div style="flex:1"><div class="stop-addr">كورنيش النيل، مصر الجديدة</div><div class="stop-meta">TW-9902 · COD 250 EGP · 01001234567</div></div><span class="chip chip-blue">الآن</span></div>
+            <!-- Stop 3-8 -->
+            <div class="route-stop"><div class="stop-num" style="background:var(--text3)">3</div><div style="flex:1"><div class="stop-addr">شارع الهرم، الجيزة</div><div class="stop-meta">TW-9903 · COD 180 EGP</div></div><span class="chip chip-gray">قادم</span></div>
+            <div class="route-stop"><div class="stop-num" style="background:var(--text3)">4</div><div style="flex:1"><div class="stop-addr">ميدان التحرير، وسط البلد</div><div class="stop-meta">TW-9904 · يفضل الاتصال أولًا</div></div><span class="chip chip-gray">قادم</span></div>
+            <div class="route-stop"><div class="stop-num" style="background:var(--text3)">5</div><div style="flex:1"><div class="stop-addr">ش عباس العقاد، نصر سيتي</div><div class="stop-meta">TW-9905 · COD 390 EGP</div></div><span class="chip chip-gray">قادم</span></div>
+            <div class="route-stop"><div class="stop-num" style="background:var(--text3)">6</div><div style="flex:1"><div class="stop-addr">مدينة الرحاب، القاهرة الجديدة</div><div class="stop-meta">TW-9906 · COD 520 EGP</div></div><span class="chip chip-gray">قادم</span></div>
+            <div class="route-stop"><div class="stop-num" style="background:var(--text3)">7</div><div style="flex:1"><div class="stop-addr">المقطم، القاهرة</div><div class="stop-meta">TW-9907 · COD 160 EGP</div></div><span class="chip chip-gray">قادم</span></div>
+            <div class="route-stop"><div class="stop-num" style="background:var(--text3)">8</div><div style="flex:1"><div class="stop-addr">مصر الجديدة، هليوبوليس</div><div class="stop-meta">TW-9908 · COD 440 EGP</div></div><span class="chip chip-gray">قادم</span></div>
+            <div style="text-align:center;padding:10px 0;font-size:11.5px;color:var(--text3)">+ 7 وقفات أخرى</div>
+          </div>
+        </div>
+        <div class="col">
+          <div class="card"><div class="map-ph"><i class="ti ti-map"></i><span>خريطة المسار المحسَّن</span><span style="font-size:11px">Google Maps Navigation</span></div></div>
+          <div class="card">
+            <div class="card-hd"><span class="card-title">ترتيب يدوي</span></div>
+            <p style="font-size:12px;color:var(--text3);margin-bottom:10px">يمكنك إعادة ترتيب الوقفات يدويًا إذا لزم الأمر</p>
+            <button class="btn-full btn-navy-full" onclick="toast('تم تحديث المسار بالخوارزمية المحسَّنة','success')"><i class="ti ti-route"></i>إعادة تحسين المسار</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════ SCAN ════ -->
+    <div id="view-scan" class="page-view" style="display:none">
+      <div class="hero-strip">
+        <div class="hero-ico"><i class="ti ti-qrcode"></i></div>
+        <div><h2>مسح الباركود</h2><p>امسح QR أو أدخل رقم التتبع يدويًا</p></div>
+      </div>
+      <div class="g2">
+        <div class="col">
+          <div class="card">
+            <div class="card-hd"><span class="card-title">مسح QR / Barcode</span></div>
+            <div class="scan-zone" onclick="simulateScan()">
+              <i class="ti ti-qrcode"></i>
+              <p style="font-weight:600;margin-bottom:4px">اضغط لتفعيل الكاميرا</p>
+              <p style="font-size:11px;color:var(--text3)">HTML5 Camera API · يدعم QR والباركود</p>
+            </div>
+            <div class="divider"></div>
+            <div style="display:flex;gap:8px">
+              <input class="form-input" id="manual-track" placeholder="أدخل رقم التتبع…" style="flex:1" onkeydown="if(event.key==='Enter')manualSearch()">
+              <button class="btn-full btn-navy-full" style="width:auto;padding:8px 16px" onclick="manualSearch()"><i class="ti ti-search"></i>بحث</button>
+            </div>
+          </div>
+          <div class="scan-result" id="scan-result">
+            <div class="card-hd" style="margin-bottom:10px">
+              <span class="card-title">نتيجة المسح</span>
+              <span class="chip chip-blue" id="scan-status">جاري التحميل…</span>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12px;margin-bottom:12px">
+              <div style="background:var(--surf2);border-radius:5px;padding:8px"><div style="color:var(--text3);font-size:10px">رقم التتبع</div><div class="tbl-mono" style="margin-top:2px" id="scan-id">TW-9902</div></div>
+              <div style="background:var(--surf2);border-radius:5px;padding:8px"><div style="color:var(--text3);font-size:10px">المستلم</div><div style="font-weight:500;margin-top:2px" id="scan-name">سارة خليل</div></div>
+              <div style="background:var(--surf2);border-radius:5px;padding:8px"><div style="color:var(--text3);font-size:10px">COD</div><div style="font-weight:700;color:var(--teal2);margin-top:2px" id="scan-cod">250 EGP</div></div>
+              <div style="background:var(--surf2);border-radius:5px;padding:8px"><div style="color:var(--text3);font-size:10px">المنطقة</div><div style="margin-top:2px" id="scan-zone">مصر الجديدة</div></div>
+            </div>
+            <div style="display:flex;gap:8px">
+              <button class="btn-full btn-teal-full" onclick="showView('deliver',null);setActive('deliver')"><i class="ti ti-circle-check"></i>تسجيل تسليم</button>
+              <button class="btn-full btn-out" onclick="showView('fail',null);setActive('fail')"><i class="ti ti-x"></i>محاولة فاشلة</button>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-hd"><span class="card-title">سجل المسح اليوم</span></div>
+          <table class="tbl">
+            <thead><tr><th>الوقت</th><th>التتبع</th><th>الإجراء</th></tr></thead>
+            <tbody>
+              <tr><td style="font-size:11px;color:var(--text3)">10:34</td><td class="tbl-mono">TW-9901</td><td><span class="chip chip-green">تسليم</span></td></tr>
+              <tr><td style="font-size:11px;color:var(--text3)">09:20</td><td class="tbl-mono">TW-9901</td><td><span class="chip chip-blue">استلام</span></td></tr>
+              <tr><td style="font-size:11px;color:var(--text3)">09:00</td><td class="tbl-mono">TW-9902</td><td><span class="chip chip-blue">استلام</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════ DELIVER ════ -->
+    <div id="view-deliver" class="page-view" style="display:none">
+      <div class="hero-strip">
+        <div class="hero-ico"><i class="ti ti-circle-check"></i></div>
+        <div><h2>تسجيل تسليم</h2><p>اختر طريقة إثبات التسليم المناسبة</p></div>
+      </div>
+      <div class="g2">
+        <div class="card">
+          <div class="card-hd"><span class="card-title">بيانات الشحنة</span></div>
+          <div style="background:var(--surf2);border-radius:var(--r-sm);padding:12px;margin-bottom:14px;display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12px">
+            <div><div style="color:var(--text3);font-size:10px">التتبع</div><div class="tbl-mono" style="margin-top:2px">TW-9902</div></div>
+            <div><div style="color:var(--text3);font-size:10px">المستلم</div><div style="font-weight:500;margin-top:2px">سارة خليل</div></div>
+            <div><div style="color:var(--text3);font-size:10px">COD المطلوب</div><div style="font-weight:700;color:var(--teal2);font-size:14px;margin-top:2px">250 EGP</div></div>
+            <div><div style="color:var(--text3);font-size:10px">العنوان</div><div style="margin-top:2px">مصر الجديدة</div></div>
+          </div>
+          <div class="card-title" style="margin-bottom:10px;font-size:12px">طريقة إثبات التسليم (PoD)</div>
+          <div class="page-tabs">
+            <button class="page-tab active" onclick="switchPod(this,'pod-sig')"><i class="ti ti-pencil"></i> توقيع</button>
+            <button class="page-tab" onclick="switchPod(this,'pod-photo')"><i class="ti ti-camera"></i> صورة</button>
+            <button class="page-tab" onclick="switchPod(this,'pod-otp')"><i class="ti ti-message"></i> OTP</button>
+          </div>
+
+          <!-- Signature -->
+          <div id="pod-sig">
+            <p style="font-size:12px;color:var(--text3);margin-bottom:8px">اطلب من العميل التوقيع على الشاشة:</p>
+            <canvas class="sig-canvas" id="sig-canvas"></canvas>
+            <div style="display:flex;gap:8px;margin-top:8px">
+              <button class="btn-full btn-out" onclick="clearSig()"><i class="ti ti-eraser"></i>مسح</button>
+            </div>
+          </div>
+
+          <!-- Photo -->
+          <div id="pod-photo" style="display:none">
+            <div class="pod-box" onclick="toast('تم التقاط الصورة بنجاح ✓','success')">
+              <i class="ti ti-camera"></i>
+              <p style="font-weight:600;margin-bottom:4px">التقاط صورة التسليم</p>
+              <p style="font-size:11px;color:var(--text3)">صورة عند باب المنزل أو مع العميل</p>
+            </div>
+          </div>
+
+          <!-- OTP -->
+          <div id="pod-otp" style="display:none">
+            <p style="font-size:12px;color:var(--text3);margin-bottom:10px">سيتم إرسال OTP لهاتف العميل: <b>01001234567</b></p>
+            <button class="btn-full btn-navy-full" style="margin-bottom:10px" onclick="toast('تم إرسال OTP إلى العميل','info')"><i class="ti ti-send"></i>إرسال OTP</button>
+            <div class="form-field"><label class="form-label">أدخل الكود</label><input class="form-input" placeholder="6 أرقام" maxlength="6" style="letter-spacing:4px;font-size:18px;text-align:center;font-family:'JetBrains Mono',monospace"></div>
+          </div>
+        </div>
+
+        <div class="col">
+          <div class="card">
+            <div class="card-hd"><span class="card-title">تأكيد التسليم</span></div>
+            <div class="form-field" style="margin-bottom:10px">
+              <label class="form-label">COD المحصَّل (EGP)</label>
+              <input class="form-input" type="number" value="250" style="font-size:18px;font-weight:700;color:var(--teal2)">
+            </div>
+            <div class="form-field" style="margin-bottom:14px">
+              <label class="form-label">ملاحظات (اختياري)</label>
+              <input class="form-input" placeholder="مثلاً: سُلِّم لجارة المستلم بإذنه">
+            </div>
+            <button class="btn-full btn-teal-full" style="margin-bottom:8px" onclick="confirmDelivery()"><i class="ti ti-circle-check"></i>تأكيد التسليم</button>
+            <button class="btn-full btn-out" onclick="showView('fail',null);setActive('fail')"><i class="ti ti-x"></i>تسجيل محاولة فاشلة</button>
+          </div>
+          <div class="card">
+            <div class="card-hd"><span class="card-title">تعليمات خاصة</span></div>
+            <div style="background:#fef3dc;border-radius:var(--r-sm);padding:10px;font-size:12px;color:#8a5d00;border:1px solid #f9d98a"><i class="ti ti-alert-triangle" style="margin-left:4px"></i>يفضل الاتصال بالعميل قبل الوصول بـ 15 دقيقة</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════ FAILED ATTEMPT ════ -->
+    <div id="view-fail" class="page-view" style="display:none">
+      <div class="hero-strip" style="background:linear-gradient(135deg,#7a1818,#b93028)">
+        <div class="hero-ico"><i class="ti ti-alert-triangle"></i></div>
+        <div><h2>تسجيل محاولة فاشلة</h2><p>حدد سبب عدم التسليم بدقة</p></div>
+      </div>
+      <div class="g2">
+        <div class="card">
+          <div class="card-hd"><span class="card-title">سبب الفشل</span></div>
+          <div class="issue-type">
+            <div class="issue-opt" onclick="selectIssue(this)"><i class="ti ti-user-off"></i>العميل غير متواجد</div>
+            <div class="issue-opt" onclick="selectIssue(this)"><i class="ti ti-phone-off"></i>لا يرد على الهاتف</div>
+            <div class="issue-opt" onclick="selectIssue(this)"><i class="ti ti-cash-off"></i>رفض الاستلام / COD</div>
+            <div class="issue-opt" onclick="selectIssue(this)"><i class="ti ti-map-pin-off"></i>عنوان غير صحيح</div>
+            <div class="issue-opt" onclick="selectIssue(this)"><i class="ti ti-package-off"></i>طلب تأجيل</div>
+            <div class="issue-opt" onclick="selectIssue(this)"><i class="ti ti-dots"></i>سبب آخر</div>
+          </div>
+          <div class="form-field" style="margin-bottom:12px"><label class="form-label">تفاصيل إضافية</label><textarea class="form-input" rows="3" placeholder="اشرح الموقف بالتفصيل…" style="resize:vertical"></textarea></div>
+          <div class="form-field" style="margin-bottom:14px"><label class="form-label">جدولة المحاولة التالية</label><input class="form-input" type="datetime-local"></div>
+          <button class="btn-full" style="background:var(--danger);color:#fff;justify-content:center;display:flex;align-items:center;gap:7px;padding:10px;border-radius:var(--r-sm);font-size:13px;font-weight:600;font-family:inherit" onclick="toast('تم تسجيل المحاولة الفاشلة','error');showView('route',null);setActive('route')"><i class="ti ti-send"></i>تسجيل المحاولة الفاشلة</button>
+        </div>
+        <div class="card">
+          <div class="card-hd"><span class="card-title">المحاولات الفاشلة اليوم</span><span class="chip chip-red">2</span></div>
+          <table class="tbl">
+            <thead><tr><th>التتبع</th><th>السبب</th><th>الوقت</th></tr></thead>
+            <tbody>
+              <tr><td class="tbl-mono">TW-9890</td><td>لا يرد على الهاتف</td><td style="font-size:11px;color:var(--text3)">09:15</td></tr>
+              <tr><td class="tbl-mono">TW-9885</td><td>عنوان خاطئ</td><td style="font-size:11px;color:var(--text3)">أمس 15:20</td></tr>
+            </tbody>
+          </table>
+          <div class="divider"></div>
+          <p style="font-size:12px;color:var(--text3)">عند تجاوز 3 محاولات فاشلة تتحول الشحنة تلقائيًا للإعادة</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════ COD ════ -->
+    <div id="view-cod" class="page-view" style="display:none">
+      <div class="hero-strip">
+        <div class="hero-ico"><i class="ti ti-cash"></i></div>
+        <div><h2>تسليم COD</h2><p>تسليم النقود المحصَّلة لمحاسب المستودع</p></div>
+      </div>
+      <div class="g2">
+        <div class="card">
+          <div class="card-hd"><span class="card-title">ملخص COD اليوم</span></div>
+          <div style="background:linear-gradient(135deg,var(--teal2),var(--teal));border-radius:var(--r-sm);padding:18px;color:#fff;margin-bottom:14px;text-align:center">
+            <div style="font-size:12px;opacity:.7;margin-bottom:6px">إجمالي COD المحصَّل</div>
+            <div style="font-size:36px;font-weight:700">350 EGP</div>
+            <div style="font-size:11px;opacity:.6;margin-top:4px">من أصل 2,840 EGP المطلوبة</div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:6px;font-size:12.5px">
+            <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--bdr)"><span style="color:var(--text3)">TW-9901 — محمد رضا</span><b style="color:var(--teal2)">350 EGP ✓</b></div>
+            <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--bdr)"><span style="color:var(--text3)">TW-9902 — سارة خليل</span><b style="color:var(--text3)">250 EGP ○</b></div>
+            <div style="display:flex;justify-content:space-between;padding:6px 0"><span style="color:var(--text3)">TW-9903-9915</span><b style="color:var(--text3)">2,240 EGP ○</b></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-hd"><span class="card-title">تسليم للمحاسب</span></div>
+          <div class="form-field" style="margin-bottom:10px"><label class="form-label">المبلغ المُسلَّم</label><input class="form-input" type="number" value="350" style="font-size:18px;font-weight:700"></div>
+          <div class="form-field" style="margin-bottom:10px"><label class="form-label">اسم المحاسب</label><select class="form-select"><option>أحمد الطيب — المستودع الرئيسي</option></select></div>
+          <div class="form-field" style="margin-bottom:14px"><label class="form-label">ملاحظات</label><input class="form-input" placeholder="اختياري"></div>
+          <button class="btn-full btn-teal-full" onclick="toast('تم تسجيل تسليم 350 EGP للمحاسب ✓','success')"><i class="ti ti-check"></i>تأكيد تسليم المبلغ</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════ EARNINGS ════ -->
+    <div id="view-earnings" class="page-view" style="display:none">
+      <div class="earnings-day">
+        <div style="font-size:12px;opacity:.7">أرباح اليوم</div>
+        <div class="earnings-val">85 EGP</div>
+        <div style="font-size:11px;opacity:.6">1 تسليم · + مكافأة سرعة متوقعة</div>
+      </div>
+      <div class="g2">
+        <div class="card">
+          <div class="card-hd"><span class="card-title">تفاصيل الأرباح</span></div>
+          <div class="earn-row"><i class="ti ti-circle-check" style="color:var(--teal2)"></i><div class="earn-desc"><div style="font-weight:500">TW-9901 — تسليم ناجح</div><div style="font-size:11px;color:var(--text3)">اليوم 10:34</div></div><span class="earn-amount" style="color:var(--teal2)">+55 EGP</span></div>
+          <div class="earn-row"><i class="ti ti-bolt" style="color:var(--gold)"></i><div class="earn-desc"><div style="font-weight:500">مكافأة السرعة</div><div style="font-size:11px;color:var(--text3)">تسليم قبل SLA بساعتين</div></div><span class="earn-amount" style="color:var(--gold)">+30 EGP</span></div>
+          <div class="divider"></div>
+          <div style="display:flex;justify-content:space-between;font-weight:700;font-size:14px;padding:4px 0"><span>المجموع</span><span style="color:var(--teal2)">85 EGP</span></div>
+        </div>
+        <div class="card">
+          <div class="card-hd"><span class="card-title">إحصائيات الشهر</span></div>
+          <div class="chart-bars" style="height:80px">
+            <div class="bar-col"><div class="bar-fill" style="background:var(--teal);height:50%"></div><div class="bar-lbl">أسبوع 1</div></div>
+            <div class="bar-col"><div class="bar-fill" style="background:var(--teal);height:70%"></div><div class="bar-lbl">أسبوع 2</div></div>
+            <div class="bar-col"><div class="bar-fill" style="background:var(--teal);height:60%"></div><div class="bar-lbl">أسبوع 3</div></div>
+            <div class="bar-col"><div class="bar-fill" style="background:var(--gold);height:30%"></div><div class="bar-lbl">الآن</div></div>
+          </div>
+          <div class="divider"></div>
+          <div style="font-size:12.5px;display:flex;justify-content:space-between"><span style="color:var(--text3)">إجمالي مايو</span><b>2,450 EGP</b></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════ RATINGS ════ -->
+    <div id="view-ratings" class="page-view" style="display:none">
+      <div class="g2">
+        <div class="card">
+          <div style="text-align:center;padding:20px 0 14px">
+            <div style="font-size:52px;font-weight:800;color:var(--text)">4.9</div>
+            <div class="rating-stars" style="justify-content:center">
+              <span class="star-btn lit">★</span><span class="star-btn lit">★</span><span class="star-btn lit">★</span><span class="star-btn lit">★</span><span class="star-btn lit">★</span>
+            </div>
+            <div style="font-size:12px;color:var(--text3)">من 38 تقييم هذا الشهر</div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:6px;font-size:12px">
+            <div style="display:flex;align-items:center;gap:8px"><span style="min-width:20px;color:var(--text3)">5★</span><div class="prog" style="flex:1"><div class="prog-fill pf-teal" style="width:88%"></div></div><span>88%</span></div>
+            <div style="display:flex;align-items:center;gap:8px"><span style="min-width:20px;color:var(--text3)">4★</span><div class="prog" style="flex:1"><div class="prog-fill pf-blue" style="width:10%"></div></div><span>10%</span></div>
+            <div style="display:flex;align-items:center;gap:8px"><span style="min-width:20px;color:var(--text3)">3★</span><div class="prog" style="flex:1"><div class="prog-fill pf-warn" style="width:2%"></div></div><span>2%</span></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-hd"><span class="card-title">آخر التعليقات</span></div>
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <div style="background:var(--surf2);border-radius:var(--r-sm);padding:10px"><div style="font-size:11px;color:var(--text3);margin-bottom:4px">⭐⭐⭐⭐⭐ · اليوم</div><p style="font-size:12.5px">سائق ممتاز، وصل في الموعد وكان محترمًا جدًا</p></div>
+            <div style="background:var(--surf2);border-radius:var(--r-sm);padding:10px"><div style="font-size:11px;color:var(--text3);margin-bottom:4px">⭐⭐⭐⭐⭐ · أمس</div><p style="font-size:12.5px">متميز، اتصل قبل الوصول وكان الطرد في حالة ممتازة</p></div>
+            <div style="background:var(--surf2);border-radius:var(--r-sm);padding:10px"><div style="font-size:11px;color:var(--text3);margin-bottom:4px">⭐⭐⭐⭐ · قبل يومين</div><p style="font-size:12.5px">خدمة جيدة، تأخر قليلًا لكن التواصل كان ممتازًا</p></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════ RETURNS ════ -->
+    <div id="view-returns" class="page-view" style="display:none">
+      <div class="hero-strip" style="background:linear-gradient(135deg,#4a1d96,#7c3aed)">
+        <div class="hero-ico"><i class="ti ti-rotate-2"></i></div>
+        <div><h2>الشحنات المُعادة</h2><p>يجب إعادتها للمستودع في نهاية الوردية</p></div>
+      </div>
+      <div class="card">
+        <div class="card-hd"><span class="card-title">قائمة الإعادة</span><span class="chip chip-purple">0 شحنات</span></div>
+        <div class="empty"><i class="ti ti-package-off"></i><p>لا توجد شحنات للإعادة اليوم</p></div>
+      </div>
+    </div>
+
+    <!-- ════ PROFILE ════ -->
+    <div id="view-profile" class="page-view" style="display:none">
+      <div class="g2">
+        <div class="card">
+          <div style="text-align:center;padding:16px 0">
+            <div class="avatar" style="width:64px;height:64px;font-size:22px;margin:0 auto 12px;background:#1a70d8">KM</div>
+            <div style="font-size:17px;font-weight:700;margin-bottom:3px">خالد منصور</div>
+            <div style="font-size:12px;color:var(--text3);margin-bottom:8px">Courier · منطقة المعادي</div>
+            <span class="chip chip-green">نشط منذ 2023</span>
+          </div>
+          <div class="divider"></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12.5px;text-align:center">
+            <div style="background:var(--surf2);border-radius:7px;padding:10px"><div style="font-size:20px;font-weight:700;color:var(--teal2)">1,248</div><div style="font-size:11px;color:var(--text3)">إجمالي التسليمات</div></div>
+            <div style="background:var(--surf2);border-radius:7px;padding:10px"><div style="font-size:20px;font-weight:700;color:var(--gold)">⭐ 4.9</div><div style="font-size:11px;color:var(--text3)">متوسط التقييم</div></div>
+            <div style="background:var(--surf2);border-radius:7px;padding:10px"><div style="font-size:20px;font-weight:700">98.2%</div><div style="font-size:11px;color:var(--text3)">معدل النجاح</div></div>
+            <div style="background:var(--surf2);border-radius:7px;padding:10px"><div style="font-size:20px;font-weight:700;color:var(--blue2)">18</div><div style="font-size:11px;color:var(--text3)">شهرًا في الفريق</div></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-hd"><span class="card-title">بيانات شخصية</span></div>
+          <div class="form-field" style="margin-bottom:10px"><label class="form-label">الاسم</label><input class="form-input" value="خالد منصور" readonly></div>
+          <div class="form-field" style="margin-bottom:10px"><label class="form-label">الهاتف</label><input class="form-input" value="01001234567"></div>
+          <div class="form-field" style="margin-bottom:10px"><label class="form-label">رقم لوحة المركبة</label><input class="form-input" value="أ ب ج 1234"></div>
+          <div class="form-field" style="margin-bottom:14px"><label class="form-label">نوع المركبة</label><select class="form-select"><option>دايو ماتيز</option><option>موتوسيكل</option><option>فان</option></select></div>
+          <button class="btn-full btn-navy-full" onclick="toast('تم حفظ البيانات','success')"><i class="ti ti-device-floppy"></i>حفظ</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+</div>
+
+<div class="toast-wrap" id="toasts"></div>
+
+<script>
+const titles={shift:'نظرة الوردية',route:'مساري اليوم',scan:'مسح الباركود',deliver:'تسجيل تسليم',pod:'إثبات التسليم',fail:'محاولة فاشلة',returns:'الشحنات المُعادة',cod:'تسليم COD',earnings:'أرباحي',ratings:'تقييماتي',profile:'ملفي الشخصي'};
+
+function showView(id,btn){
+  document.querySelectorAll('.page-view').forEach(v=>v.style.display='none');
+  const el=document.getElementById('view-'+id);
+  if(el)el.style.display='block';
+  if(btn){document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));btn.classList.add('active');}
+  document.getElementById('tb-title').textContent=titles[id]||id;
+}
+function setActive(id){document.querySelectorAll('.nav-item').forEach(b=>{if(b.getAttribute('onclick')?.includes(`'${id}'`)){b.classList.add('active');}else b.classList.remove('active');});}
+
+function switchPod(btn,id){
+  document.querySelectorAll('.page-tab').forEach(b=>b.classList.remove('active'));btn.classList.add('active');
+  ['pod-sig','pod-photo','pod-otp'].forEach(s=>{const el=document.getElementById(s);if(el)el.style.display=s===id?'block':'none';});
+}
+
+/* Signature canvas */
+window.addEventListener('load',()=>{
+  const c=document.getElementById('sig-canvas');if(!c)return;
+  const ctx=c.getContext('2d');let drawing=false;
+  c.addEventListener('mousedown',e=>{drawing=true;ctx.beginPath();ctx.moveTo(e.offsetX,e.offsetY);});
+  c.addEventListener('mousemove',e=>{if(!drawing)return;ctx.lineTo(e.offsetX,e.offsetY);ctx.strokeStyle='#07213d';ctx.lineWidth=2;ctx.lineCap='round';ctx.stroke();});
+  c.addEventListener('mouseup',()=>drawing=false);
+  c.addEventListener('mouseleave',()=>drawing=false);
+  c.addEventListener('touchstart',e=>{e.preventDefault();drawing=true;const r=c.getBoundingClientRect();ctx.beginPath();ctx.moveTo(e.touches[0].clientX-r.left,e.touches[0].clientY-r.top);});
+  c.addEventListener('touchmove',e=>{e.preventDefault();if(!drawing)return;const r=c.getBoundingClientRect();ctx.lineTo(e.touches[0].clientX-r.left,e.touches[0].clientY-r.top);ctx.strokeStyle='#07213d';ctx.lineWidth=2;ctx.lineCap='round';ctx.stroke();});
+  c.addEventListener('touchend',()=>drawing=false);
+});
+function clearSig(){const c=document.getElementById('sig-canvas');if(c)c.getContext('2d').clearRect(0,0,c.width,c.height);}
+
+function simulateScan(){
+  const r=document.getElementById('scan-result');
+  if(r){r.style.display='block';document.getElementById('scan-status').textContent='في الطريق';}
+  toast('تم مسح TW-9902 بنجاح','success');
+}
+function manualSearch(){
+  const val=document.getElementById('manual-track').value;
+  if(!val){toast('أدخل رقم التتبع','error');return;}
+  simulateScan();toast(`تم العثور على ${val}`,'success');
+}
+function confirmDelivery(){toast('تم تسجيل تسليم TW-9902 بنجاح ✓','success');showView('shift',null);setActive('shift');}
+function selectIssue(el){document.querySelectorAll('.issue-opt').forEach(o=>o.classList.remove('sel'));el.classList.add('sel');}
+
+/* Clock */
+function tick(){const n=new Date();document.getElementById('clock').textContent=n.toLocaleTimeString('ar-EG');}
+tick();setInterval(tick,1000);
+
+function toast(msg,type='info'){
+  const w=document.getElementById('toasts');const t=document.createElement('div');
+  t.className=`toast toast-${type}`;
+  t.innerHTML=`<i class="ti ti-${type==='success'?'circle-check':type==='error'?'circle-x':'info-circle'}"></i>${msg}`;
+  w.appendChild(t);setTimeout(()=>t.remove(),3200);
+}
+</script>
+</body>
+</html>

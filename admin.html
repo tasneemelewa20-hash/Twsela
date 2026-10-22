@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>توصيلة — Admin Dashboard</title>
+<link rel="stylesheet" href="portal.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.4.0/dist/tabler-icons.min.css">
+<style>
+/* Admin-specific */
+.overview-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; margin-bottom:16px; }
+.revenue-big { font-size:32px; font-weight:700; color:var(--text); }
+.revenue-sub { font-size:12px; color:var(--text3); margin-top:2px; }
+.zone-row { display:flex; align-items:center; gap:10px; padding:7px 0; border-bottom:1px solid var(--bdr); font-size:12.5px; }
+.zone-row:last-child { border-bottom:none; }
+.zone-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+.zone-name { flex:1; }
+.zone-count { font-weight:600; }
+.courier-card { display:flex; align-items:center; gap:10px; padding:8px 0; border-bottom:1px solid var(--bdr); }
+.courier-card:last-child { border-bottom:none; }
+.courier-info { flex:1; min-width:0; }
+.courier-name { font-size:12.5px; font-weight:500; }
+.courier-meta { font-size:11px; color:var(--text3); }
+.courier-stats { display:flex; gap:12px; font-size:12px; }
+.courier-stat { text-align:center; }
+.courier-stat span { display:block; font-weight:600; }
+.courier-stat small { font-size:10px; color:var(--text3); }
+.alert-item { display:flex; align-items:flex-start; gap:10px; padding:10px 0; border-bottom:1px solid var(--bdr); }
+.alert-item:last-child { border-bottom:none; }
+.alert-icon { width:32px; height:32px; border-radius:7px; display:flex; align-items:center; justify-content:center; font-size:16px; flex-shrink:0; }
+.alert-title { font-size:12.5px; font-weight:500; margin-bottom:2px; }
+.alert-meta { font-size:11px; color:var(--text3); }
+.log-item { display:flex; gap:10px; padding:7px 0; border-bottom:1px solid var(--bdr); font-size:12px; }
+.log-item:last-child { border-bottom:none; }
+.log-time { font-family:'JetBrains Mono',monospace; font-size:10.5px; color:var(--text3); flex-shrink:0; width:80px; padding-top:1px; }
+.log-dot { width:7px; height:7px; border-radius:50%; flex-shrink:0; margin-top:4px; }
+.log-text { flex:1; color:var(--text2); line-height:1.5; }
+.tenant-row { display:flex; align-items:center; gap:10px; padding:8px 0; border-bottom:1px solid var(--bdr); font-size:12.5px; }
+.tenant-row:last-child { border-bottom:none; }
+.tenant-av { width:28px; height:28px; border-radius:6px; background:var(--surf3); display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; color:var(--navy); flex-shrink:0; }
+.tenant-name { flex:1; font-weight:500; }
+.mini-map-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:6px; }
+.map-zone-card { background:var(--surf2); border:1px solid var(--bdr); border-radius:6px; padding:8px 10px; }
+.map-zone-name { font-size:11.5px; font-weight:600; margin-bottom:3px; }
+.map-zone-count { font-size:11px; color:var(--text3); }
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- ══ SIDEBAR ══ -->
+<aside class="sidebar">
+  <div class="sb-logo">
+    <div class="sb-logo-icon">ت</div>
+    <div><div class="sb-logo-name">توصيلة</div><div class="sb-logo-sub">Courier Management</div></div>
+  </div>
+  <div class="sb-portal-badge">
+    <i class="ti ti-layout-dashboard" style="color:var(--teal);font-size:18px"></i>
+    <div><div class="sb-portal-badge-name">Admin Dashboard</div><div class="sb-portal-badge-role">Owner / Admin</div></div>
+    <div class="sb-portal-dot"></div>
+  </div>
+  <nav class="sb-nav">
+    <div class="nav-grp">العمليات</div>
+    <button class="nav-item active" onclick="showView('overview',this)"><i class="ti ti-layout-dashboard"></i>نظرة عامة</button>
+    <button class="nav-item" onclick="showView('shipments',this)"><i class="ti ti-package"></i>الشحنات<span class="nav-bdg bdg-amber">12</span></button>
+    <button class="nav-item" onclick="showView('tracking',this)"><i class="ti ti-map-pin"></i>التتبع المباشر</button>
+    <button class="nav-item" onclick="showView('routes',this)"><i class="ti ti-route"></i>المسارات والتوزيع</button>
+    <div class="nav-grp">الإدارة</div>
+    <button class="nav-item" onclick="showView('merchants',this)"><i class="ti ti-building-store"></i>التجار<span class="nav-bdg bdg-blue">3</span></button>
+    <button class="nav-item" onclick="showView('couriers',this)"><i class="ti ti-bike"></i>السائقون</button>
+    <button class="nav-item" onclick="showView('warehouses',this)"><i class="ti ti-building-warehouse"></i>المستودعات</button>
+    <button class="nav-item" onclick="showView('zones',this)"><i class="ti ti-map"></i>المناطق والأسعار</button>
+    <div class="nav-grp">المالية</div>
+    <button class="nav-item" onclick="showView('invoices',this)"><i class="ti ti-file-invoice"></i>الفواتير<span class="nav-bdg bdg-red">5</span></button>
+    <button class="nav-item" onclick="showView('wallets',this)"><i class="ti ti-wallet"></i>المحافظ</button>
+    <button class="nav-item" onclick="showView('settlements',this)"><i class="ti ti-building-bank"></i>التسويات</button>
+    <button class="nav-item" onclick="showView('reports',this)"><i class="ti ti-chart-bar"></i>التقارير</button>
+    <div class="nav-grp">الإعدادات</div>
+    <button class="nav-item" onclick="showView('users',this)"><i class="ti ti-users"></i>المستخدمون</button>
+    <button class="nav-item" onclick="showView('tenants',this)"><i class="ti ti-building"></i>التناتات</button>
+    <button class="nav-item" onclick="showView('system',this)"><i class="ti ti-settings"></i>إعدادات النظام</button>
+    <button class="nav-item" onclick="showView('audit',this)"><i class="ti ti-shield-check"></i>سجل الأحداث</button>
+  </nav>
+  <div class="sb-footer">
+    <div class="user-row">
+      <div class="avatar">AO</div>
+      <div><div class="user-name">أحمد العمري</div><div class="user-meta">Owner · System Admin</div></div>
+      <i class="ti ti-logout"></i>
+    </div>
+  </div>
+</aside>
+
+<!-- ══ MAIN ══ -->
+<div class="main">
+  <div class="topbar">
+    <div class="tb-page-info">
+      <div class="tb-title" id="tb-title">لوحة التحكم — Admin Dashboard</div>
+      <div class="tb-sub" id="tb-sub">نظرة شاملة على عمليات اليوم · الأحد، 18 مايو 2025</div>
+    </div>
+    <div class="tb-search"><i class="ti ti-search"></i><input type="text" placeholder="بحث شحنة، تاجر، سائق…"></div>
+    <button class="tb-btn" onclick="toast('لا توجد إشعارات جديدة','info')"><i class="ti ti-bell"></i><div class="notif-dot"></div></button>
+    <button class="tb-btn" onclick="toast('تم تحديث البيانات','success')"><i class="ti ti-refresh"></i></button>
+    <button class="tb-btn tb-btn-prim" onclick="openModal('modal-newship')"><i class="ti ti-plus"></i>شحنة جديدة</button>
+    <a href="index.html" class="tb-btn" style="text-decoration:none"><i class="ti ti-home"></i></a>
+  </div>
+
+  <div class="content" id="content">
+
+    <!-- ════ OVERVIEW ════ -->
+    <div id="view-overview" class="page-view">
+      <!-- Stats -->
+      <div class="stats-row">
+        <div class="stat-card"><div class="stat-accent" style="background:var(--blue2)"></div><div class="stat-lbl"><i class="ti ti-package"></i>إجمالي الشحنات</div><div class="stat-val">12,847</div><div class="stat-ch up"><i class="ti ti-trending-up"></i>+8.3% هذا الشهر</div><i class="ti ti-package stat-bg-icon"></i></div>
+        <div class="stat-card"><div class="stat-accent" style="background:var(--teal)"></div><div class="stat-lbl"><i class="ti ti-circle-check"></i>تم التسليم</div><div class="stat-val">10,204</div><div class="stat-ch up"><i class="ti ti-trending-up"></i>79.4% نسبة النجاح</div><i class="ti ti-circle-check stat-bg-icon"></i></div>
+        <div class="stat-card"><div class="stat-accent" style="background:var(--gold)"></div><div class="stat-lbl"><i class="ti ti-cash"></i>الإيرادات (EGP)</div><div class="stat-val">84,320</div><div class="stat-ch up"><i class="ti ti-trending-up"></i>+12.1%</div><i class="ti ti-cash stat-bg-icon"></i></div>
+        <div class="stat-card"><div class="stat-accent" style="background:var(--danger)"></div><div class="stat-lbl"><i class="ti ti-bike"></i>السائقون النشطون</div><div class="stat-val">143</div><div class="stat-ch dn"><i class="ti ti-trending-down"></i>3 offline اليوم</div><i class="ti ti-bike stat-bg-icon"></i></div>
+      </div>
+
+      <div class="g2">
+        <!-- Latest shipments -->
+        <div class="card">
+          <div class="card-hd"><span class="card-title">آخر الشحنات</span><button class="card-act" onclick="showView('shipments',null)">عرض الكل</button></div>
+          <div class="tbl-scroll"><table class="tbl">
+            <thead><tr><th>التتبع</th><th>التاجر</th><th>المستلم</th><th>المنطقة</th><th>COD</th><th>الحالة</th></tr></thead>
+            <tbody>
+              <tr><td class="tbl-mono">TW-9901</td><td>متجر الأناقة</td><td>محمد رضا</td><td>القاهرة</td><td>350</td><td><span class="chip chip-green">مُسلَّم</span></td></tr>
+              <tr><td class="tbl-mono">TW-9902</td><td>تك ستور</td><td>سارة خليل</td><td>الجيزة</td><td>180</td><td><span class="chip chip-blue">في الطريق</span></td></tr>
+              <tr><td class="tbl-mono">TW-9903</td><td>بوتيك ريم</td><td>علي حسن</td><td>الإسكندرية</td><td>420</td><td><span class="chip chip-amber">معلق</span></td></tr>
+              <tr><td class="tbl-mono">TW-9904</td><td>فريش ماركت</td><td>نورا أحمد</td><td>الدقهلية</td><td>—</td><td><span class="chip chip-red">مُعاد</span></td></tr>
+              <tr><td class="tbl-mono">TW-9905</td><td>متجر الأناقة</td><td>تامر سمير</td><td>الشرقية</td><td>650</td><td><span class="chip chip-blue">في الطريق</span></td></tr>
+              <tr><td class="tbl-mono">TW-9906</td><td>Digital Hub</td><td>هناء فوزي</td><td>بني سويف</td><td>290</td><td><span class="chip chip-green">مُسلَّم</span></td></tr>
+            </tbody>
+          </table></div>
+        </div>
+
+        <!-- Charts -->
+        <div class="col">
+          <div class="card">
+            <div class="card-hd"><span class="card-title">الشحنات — آخر 7 أيام</span></div>
+            <div class="chart-bars">
+              <div class="bar-col"><div class="bar-fill" style="background:var(--blue2);height:52%"></div><div class="bar-lbl">سبت</div></div>
+              <div class="bar-col"><div class="bar-fill" style="background:var(--blue2);height:67%"></div><div class="bar-lbl">أحد</div></div>
+              <div class="bar-col"><div class="bar-fill" style="background:var(--blue2);height:45%"></div><div class="bar-lbl">اثن</div></div>
+              <div class="bar-col"><div class="bar-fill" style="background:var(--blue2);height:82%"></div><div class="bar-lbl">ثلا</div></div>
+              <div class="bar-col"><div class="bar-fill" style="background:var(--blue2);height:60%"></div><div class="bar-lbl">أرب</div></div>
+              <div class="bar-col"><div class="bar-fill" style="background:var(--teal);height:91%"></div><div class="bar-lbl">خمي</div></div>
+              <div class="bar-col"><div class="bar-fill" style="background:var(--teal);height:76%"></div><div class="bar-lbl">جمع</div></div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-hd"><span class="card-title">توزيع الحالات</span></div>
+            <div style="display:flex;flex-direction:column;gap:7px;font-size:12px">
+              <div style="display:flex;align-items:center;gap:8px"><span style="min-width:75px;color:var(--text3)">مُسلَّم</span><div class="prog" style="flex:1"><div class="prog-fill pf-teal" style="width:79%"></div></div><b style="min-width:28px">79%</b></div>
+              <div style="display:flex;align-items:center;gap:8px"><span style="min-width:75px;color:var(--text3)">في الطريق</span><div class="prog" style="flex:1"><div class="prog-fill pf-blue" style="width:11%"></div></div><b style="min-width:28px">11%</b></div>
+              <div style="display:flex;align-items:center;gap:8px"><span style="min-width:75px;color:var(--text3)">معلق</span><div class="prog" style="flex:1"><div class="prog-fill pf-warn" style="width:6%"></div></div><b style="min-width:28px">6%</b></div>
+              <div style="display:flex;align-items:center;gap:8px"><span style="min-width:75px;color:var(--text3)">مُعاد</span><div class="prog" style="flex:1"><div class="prog-fill pf-red" style="width:4%"></div></div><b style="min-width:28px">4%</b></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="overview-grid">
+        <!-- Couriers -->
+        <div class="card">
+          <div class="card-hd"><span class="card-title">أداء السائقين</span><button class="card-act" onclick="showView('couriers',null)">إدارة</button></div>
+          <div class="courier-card"><div class="avatar" style="background:#1a70d8">KM</div><div class="courier-info"><div class="courier-name">خالد منصور</div><div class="courier-meta">المعادي · <span style="color:var(--teal2)">نشط</span></div></div><div class="courier-stats"><div class="courier-stat"><span>38</span><small>تسليم</small></div><div class="courier-stat"><span>⭐4.9</span><small>تقييم</small></div></div></div>
+          <div class="courier-card"><div class="avatar" style="background:#0a5e44">YI</div><div class="courier-info"><div class="courier-name">يوسف إبراهيم</div><div class="courier-meta">الجيزة · <span style="color:var(--teal2)">نشط</span></div></div><div class="courier-stats"><div class="courier-stat"><span>31</span><small>تسليم</small></div><div class="courier-stat"><span>⭐4.7</span><small>تقييم</small></div></div></div>
+          <div class="courier-card"><div class="avatar" style="background:#7a3d00">HS</div><div class="courier-info"><div class="courier-name">هاني سعيد</div><div class="courier-meta">الهرم · <span style="color:var(--warn)">استراحة</span></div></div><div class="courier-stats"><div class="courier-stat"><span>27</span><small>تسليم</small></div><div class="courier-stat"><span>⭐4.5</span><small>تقييم</small></div></div></div>
+          <div class="courier-card"><div class="avatar">RF</div><div class="courier-info"><div class="courier-name">رامي فوزي</div><div class="courier-meta">نصر سيتي · <span style="color:var(--text3)">Offline</span></div></div><div class="courier-stats"><div class="courier-stat"><span>0</span><small>تسليم</small></div><div class="courier-stat"><span>⭐4.8</span><small>تقييم</small></div></div></div>
+        </div>
+
+        <!-- Alerts -->
+        <div class="card">
+          <div class="card-hd"><span class="card-title">التنبيهات النشطة</span><span class="chip chip-red">5</span></div>
+          <div class="alert-item"><div class="alert-icon" style="background:#fde8e7;color:var(--danger)"><i class="ti ti-alert-triangle"></i></div><div><div class="alert-title">3 شحنات تجاوزت SLA</div><div class="alert-meta">TW-9891, TW-9892, TW-9893 · منذ 4 ساعات</div></div></div>
+          <div class="alert-item"><div class="alert-icon" style="background:#fef3dc;color:var(--gold)"><i class="ti ti-cash"></i></div><div><div class="alert-title">طلب سحب بانتظار الموافقة</div><div class="alert-meta">متجر الأناقة · 12,400 EGP</div></div></div>
+          <div class="alert-item"><div class="alert-icon" style="background:#e3effe;color:var(--blue)"><i class="ti ti-user-plus"></i></div><div><div class="alert-title">تاجر جديد يطلب الانضمام</div><div class="alert-meta">Elite Store · منذ ساعة</div></div></div>
+          <div class="alert-item"><div class="alert-icon" style="background:#fde8e7;color:var(--danger)"><i class="ti ti-building-warehouse"></i></div><div><div class="alert-title">مستودع الجيزة ممتلئ 91%</div><div class="alert-meta">Hub 03 · يحتاج إجراء فوري</div></div></div>
+        </div>
+
+        <!-- Zones -->
+        <div class="card">
+          <div class="card-hd"><span class="card-title">المناطق النشطة</span><button class="card-act" onclick="showView('zones',null)">الكل</button></div>
+          <div class="zone-row"><div class="zone-dot" style="background:var(--teal)"></div><span class="zone-name">القاهرة الكبرى</span><span class="zone-count">4,210</span><span class="chip chip-green" style="height:18px;font-size:10px">نشط</span></div>
+          <div class="zone-row"><div class="zone-dot" style="background:var(--blue2)"></div><span class="zone-name">الجيزة</span><span class="zone-count">2,840</span><span class="chip chip-green" style="height:18px;font-size:10px">نشط</span></div>
+          <div class="zone-row"><div class="zone-dot" style="background:var(--purple)"></div><span class="zone-name">الإسكندرية</span><span class="zone-count">1,920</span><span class="chip chip-green" style="height:18px;font-size:10px">نشط</span></div>
+          <div class="zone-row"><div class="zone-dot" style="background:var(--gold)"></div><span class="zone-name">الدلتا</span><span class="zone-count">980</span><span class="chip chip-amber" style="height:18px;font-size:10px">جزئي</span></div>
+          <div class="zone-row"><div class="zone-dot" style="background:var(--text3)"></div><span class="zone-name">الصعيد</span><span class="zone-count">340</span><span class="chip chip-amber" style="height:18px;font-size:10px">جزئي</span></div>
+        </div>
+      </div>
+
+      <div class="g2">
+        <!-- Tenants -->
+        <div class="card">
+          <div class="card-hd"><span class="card-title">التناتات النشطة</span><button class="card-act" onclick="showView('tenants',null)">إدارة</button></div>
+          <div class="tenant-row"><div class="tenant-av">MA</div><span class="tenant-name">متجر الأناقة</span><span class="chip chip-teal">Enterprise</span><span style="font-size:12px;color:var(--text3)">248 شحنة</span></div>
+          <div class="tenant-row"><div class="tenant-av">TS</div><span class="tenant-name">تك ستور</span><span class="chip chip-blue">Pro</span><span style="font-size:12px;color:var(--text3)">134 شحنة</span></div>
+          <div class="tenant-row"><div class="tenant-av">BR</div><span class="tenant-name">بوتيك ريم</span><span class="chip chip-navy">Basic</span><span style="font-size:12px;color:var(--text3)">67 شحنة</span></div>
+          <div class="tenant-row"><div class="tenant-av">FM</div><span class="tenant-name">فريش ماركت</span><span class="chip chip-navy">Basic</span><span style="font-size:12px;color:var(--text3)">43 شحنة</span></div>
+        </div>
+
+        <!-- Audit log -->
+        <div class="card">
+          <div class="card-hd"><span class="card-title">سجل الأحداث الأخيرة</span><button class="card-act" onclick="showView('audit',null)">الكل</button></div>
+          <div class="log-item"><div class="log-time">10:34</div><div class="log-dot" style="background:var(--teal)"></div><div class="log-text">تسليم TW-9901 — خالد منصور · المعادي</div></div>
+          <div class="log-item"><div class="log-time">10:18</div><div class="log-dot" style="background:var(--blue2)"></div><div class="log-text">إنشاء شحنة TW-9906 — متجر الأناقة</div></div>
+          <div class="log-item"><div class="log-time">09:55</div><div class="log-dot" style="background:var(--gold)"></div><div class="log-text">طلب سحب 12,400 EGP — متجر الأناقة</div></div>
+          <div class="log-item"><div class="log-time">09:40</div><div class="log-dot" style="background:var(--danger)"></div><div class="log-text">فشل تسليم TW-9890 — العميل غير متواجد</div></div>
+          <div class="log-item"><div class="log-time">09:12</div><div class="log-dot" style="background:var(--purple)"></div><div class="log-text">تسجيل دخول Admin — IP: 41.234.xx.xx</div></div>
+          <div class="log-item"><div class="log-time">08:50</div><div class="log-dot" style="background:var(--teal)"></div><div class="log-text">بدء وردية السائقين — 143 سائق نشط</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════ SHIPMENTS ════ -->
+    <div id="view-shipments" class="page-view" style="display:none">
+      <div class="stats-row">
+        <div class="stat-card"><div class="stat-accent" style="background:var(--blue2)"></div><div class="stat-lbl"><i class="ti ti-package"></i>إجمالي اليوم</div><div class="stat-val">1,284</div><div class="stat-ch up"><i class="ti ti-trending-up"></i>+5.2%</div></div>
+        <div class="stat-card"><div class="stat-accent" style="background:var(--teal)"></div><div class="stat-lbl"><i class="ti ti-circle-check"></i>مُسلَّمة</div><div class="stat-val">987</div><div class="stat-ch up"><i class="ti ti-trending-up"></i>76.8%</div></div>
+        <div class="stat-card"><div class="stat-accent" style="background:var(--gold)"></div><div class="stat-lbl"><i class="ti ti-clock"></i>في الطريق</div><div class="stat-val">210</div><div class="stat-ch" style="color:var(--text3)">16.3%</div></div>
+        <div class="stat-card"><div class="stat-accent" style="background:var(--danger)"></div><div class="stat-lbl"><i class="ti ti-rotate-2"></i>مُعادة</div><div class="stat-val">87</div><div class="stat-ch dn"><i class="ti ti-trending-down"></i>6.8%</div></div>
+      </div>
+      <div class="card">
+        <div class="card-hd">
+          <span class="card-title">جدول الشحنات</span>
+          <div style="display:flex;gap:8px">
+            <select class="form-select" style="width:130px;padding:5px 8px;font-size:12px"><option>كل الحالات</option><option>مُسلَّم</option><option>في الطريق</option><option>معلق</option><option>مُعاد</option></select>
+            <button class="tb-btn tb-btn-prim" onclick="openModal('modal-newship')"><i class="ti ti-plus"></i>جديد</button>
+          </div>
+        </div>
+        <div class="tbl-scroll"><table class="tbl">
+          <thead><tr><th>رقم التتبع</th><th>التاجر</th><th>المستلم</th><th>الهاتف</th><th>المنطقة</th><th>الوزن</th><th>COD</th><th>السائق</th><th>الحالة</th><th>التاريخ</th></tr></thead>
+          <tbody id="shipments-tbody">
+            <tr><td class="tbl-mono">TW-9906</td><td>Digital Hub</td><td>هناء فوزي</td><td>0101234567</td><td>بني سويف</td><td>1.4 كجم</td><td>290</td><td>خالد م.</td><td><span class="chip chip-green">مُسلَّم</span></td><td>اليوم 10:18</td></tr>
+            <tr><td class="tbl-mono">TW-9905</td><td>متجر الأناقة</td><td>تامر سمير</td><td>0109876543</td><td>الشرقية</td><td>3.1 كجم</td><td>650</td><td>يوسف إ.</td><td><span class="chip chip-blue">في الطريق</span></td><td>اليوم 09:40</td></tr>
+            <tr><td class="tbl-mono">TW-9904</td><td>فريش ماركت</td><td>نورا أحمد</td><td>0111234560</td><td>الدقهلية</td><td>0.5 كجم</td><td>—</td><td>هاني س.</td><td><span class="chip chip-red">مُعاد</span></td><td>اليوم 09:15</td></tr>
+            <tr><td class="tbl-mono">TW-9903</td><td>بوتيك ريم</td><td>علي حسن</td><td>0123456789</td><td>الإسكندرية</td><td>2.0 كجم</td><td>420</td><td>—</td><td><span class="chip chip-amber">معلق</span></td><td>أمس 18:30</td></tr>
+            <tr><td class="tbl-mono">TW-9902</td><td>تك ستور</td><td>سارة خليل</td><td>0151234567</td><td>الجيزة</td><td>0.8 كجم</td><td>180</td><td>رامي ف.</td><td><span class="chip chip-blue">في الطريق</span></td><td>أمس 17:00</td></tr>
+            <tr><td class="tbl-mono">TW-9901</td><td>متجر الأناقة</td><td>محمد رضا</td><td>0161234567</td><td>القاهرة</td><td>1.2 كجم</td><td>350</td><td>خالد م.</td><td><span class="chip chip-green">مُسلَّم</span></td><td>اليوم 10:34</td></tr>
+          </tbody>
+        </table></div>
+      </div>
+    </div>
+
+    <!-- ════ COURIERS ════ -->
+    <div id="view-couriers" class="page-view" style="display:none">
+      <div class="stats-row">
+        <div class="stat-card"><div class="stat-accent" style="background:var(--teal)"></div><div class="stat-lbl"><i class="ti ti-bike"></i>نشط الآن</div><div class="stat-val">143</div></div>
+        <div class="stat-card"><div class="stat-accent" style="background:var(--gold)"></div><div class="stat-lbl"><i class="ti ti-coffee"></i>في استراحة</div><div class="stat-val">18</div></div>
+        <div class="stat-card"><div class="stat-accent" style="background:var(--text3)"></div><div class="stat-lbl"><i class="ti ti-wifi-off"></i>Offline</div><div class="stat-val">3</div></div>
+        <div class="stat-card"><div class="stat-accent" style="background:var(--blue2)"></div><div class="stat-lbl"><i class="ti ti-star"></i>متوسط التقييم</div><div class="stat-val">4.7</div><div class="stat-ch up">⭐ ممتاز</div></div>
+      </div>
+      <div class="card">
+        <div class="card-hd"><span class="card-title">جدول السائقين</span><button class="tb-btn tb-btn-prim" onclick="toast('إضافة سائق جديد','info')"><i class="ti ti-user-plus"></i>إضافة سائق</button></div>
+        <div class="tbl-scroll"><table class="tbl">
+          <thead><tr><th>السائق</th><th>المنطقة</th><th>المركبة</th><th>تسليمات اليوم</th><th>COD محصَّل</th><th>التقييم</th><th>الحالة</th><th>إجراء</th></tr></thead>
+          <tbody>
+            <tr><td><div style="display:flex;align-items:center;gap:7px"><div class="avatar" style="width:26px;height:26px;font-size:9px;background:#1a70d8">KM</div>خالد منصور</div></td><td>المعادي</td><td>دايو ماتيز</td><td>38</td><td>4,200 EGP</td><td>⭐ 4.9</td><td><span class="chip chip-green">نشط</span></td><td><button class="tb-btn" style="padding:4px 8px;font-size:11px" onclick="toast('تفاصيل السائق: خالد منصور','info')"><i class="ti ti-eye"></i></button></td></tr>
+            <tr><td><div style="display:flex;align-items:center;gap:7px"><div class="avatar" style="width:26px;height:26px;font-size:9px;background:#0a5e44">YI</div>يوسف إبراهيم</div></td><td>الجيزة</td><td>هيونداي H1</td><td>31</td><td>3,150 EGP</td><td>⭐ 4.7</td><td><span class="chip chip-green">نشط</span></td><td><button class="tb-btn" style="padding:4px 8px;font-size:11px"><i class="ti ti-eye"></i></button></td></tr>
+            <tr><td><div style="display:flex;align-items:center;gap:7px"><div class="avatar" style="width:26px;height:26px;font-size:9px;background:#7a3d00">HS</div>هاني سعيد</div></td><td>الهرم</td><td>كيا بيكانتو</td><td>27</td><td>2,800 EGP</td><td>⭐ 4.5</td><td><span class="chip chip-amber">استراحة</span></td><td><button class="tb-btn" style="padding:4px 8px;font-size:11px"><i class="ti ti-eye"></i></button></td></tr>
+            <tr><td><div style="display:flex;align-items:center;gap:7px"><div class="avatar" style="width:26px;height:26px;font-size:9px">RF</div>رامي فوزي</div></td><td>نصر سيتي</td><td>تويوتا Corolla</td><td>0</td><td>0 EGP</td><td>⭐ 4.8</td><td><span class="chip chip-gray">Offline</span></td><td><button class="tb-btn" style="padding:4px 8px;font-size:11px"><i class="ti ti-eye"></i></button></td></tr>
+          </tbody>
+        </table></div>
+      </div>
+    </div>
+
+    <!-- ════ MERCHANTS ════ -->
+    <div id="view-merchants" class="page-view" style="display:none">
+      <div class="card">
+        <div class="card-hd"><span class="card-title">التجار المسجلون</span><button class="tb-btn tb-btn-prim" onclick="toast('إضافة تاجر جديد','info')"><i class="ti ti-plus"></i>تاجر جديد</button></div>
+        <div class="tbl-scroll"><table class="tbl">
+          <thead><tr><th>اسم المتجر</th><th>الخطة</th><th>شحنات الشهر</th><th>الحد الأقصى</th><th>الاستخدام</th><th>الرصيد</th><th>الحالة</th><th>إجراء</th></tr></thead>
+          <tbody>
+            <tr><td><b>متجر الأناقة</b></td><td><span class="chip chip-teal">Enterprise</span></td><td>248</td><td>500</td><td><div class="prog" style="width:100px"><div class="prog-fill pf-blue" style="width:49.6%"></div></div></td><td>12,400 EGP</td><td><span class="chip chip-green">نشط</span></td><td><button class="tb-btn" style="padding:4px 8px;font-size:11px" onclick="toast('تفاصيل: متجر الأناقة','info')"><i class="ti ti-eye"></i></button></td></tr>
+            <tr><td><b>تك ستور</b></td><td><span class="chip chip-blue">Pro</span></td><td>134</td><td>250</td><td><div class="prog" style="width:100px"><div class="prog-fill pf-blue" style="width:53.6%"></div></div></td><td>5,800 EGP</td><td><span class="chip chip-green">نشط</span></td><td><button class="tb-btn" style="padding:4px 8px;font-size:11px"><i class="ti ti-eye"></i></button></td></tr>
+            <tr><td><b>بوتيك ريم</b></td><td><span class="chip chip-navy">Basic</span></td><td>67</td><td>100</td><td><div class="prog" style="width:100px"><div class="prog-fill pf-warn" style="width:67%"></div></div></td><td>2,100 EGP</td><td><span class="chip chip-green">نشط</span></td><td><button class="tb-btn" style="padding:4px 8px;font-size:11px"><i class="ti ti-eye"></i></button></td></tr>
+            <tr><td><b>فريش ماركت</b></td><td><span class="chip chip-navy">Basic</span></td><td>43</td><td>100</td><td><div class="prog" style="width:100px"><div class="prog-fill pf-teal" style="width:43%"></div></div></td><td>890 EGP</td><td><span class="chip chip-green">نشط</span></td><td><button class="tb-btn" style="padding:4px 8px;font-size:11px"><i class="ti ti-eye"></i></button></td></tr>
+            <tr><td><b>Elite Store</b></td><td><span class="chip chip-gray">—</span></td><td>0</td><td>—</td><td>—</td><td>0 EGP</td><td><span class="chip chip-amber">معلق</span></td><td><button class="tb-btn tb-btn-teal" style="padding:4px 8px;font-size:11px" onclick="toast('تمت الموافقة على Elite Store','success')">موافقة</button></td></tr>
+          </tbody>
+        </table></div>
+      </div>
+    </div>
+
+    <!-- ════ WALLETS ════ -->
+    <div id="view-wallets" class="page-view" style="display:none">
+      <div class="stats-row">
+        <div class="stat-card"><div class="stat-accent" style="background:var(--teal)"></div><div class="stat-lbl"><i class="ti ti-wallet"></i>إجمالي الأرصدة</div><div class="stat-val">84,320</div><div class="stat-ch" style="color:var(--text3)">EGP في النظام</div></div>
+        <div class="stat-card"><div class="stat-accent" style="background:var(--blue2)"></div><div class="stat-lbl"><i class="ti ti-building-store"></i>محافظ التجار</div><div class="stat-val">21,190</div></div>
+        <div class="stat-card"><div class="stat-accent" style="background:var(--gold)"></div><div class="stat-lbl"><i class="ti ti-bike"></i>محافظ السائقين</div><div class="stat-val">8,340</div></div>
+        <div class="stat-card"><div class="stat-accent" style="background:var(--danger)"></div><div class="stat-lbl"><i class="ti ti-clock"></i>طلبات سحب معلقة</div><div class="stat-val">3</div><div class="stat-ch dn">تحتاج موافقة</div></div>
+      </div>
+      <div class="card">
+        <div class="card-hd"><span class="card-title">طلبات السحب المعلقة</span></div>
+        <div class="tbl-scroll"><table class="tbl">
+          <thead><tr><th>المستخدم</th><th>النوع</th><th>المبلغ</th><th>الحساب البنكي</th><th>تاريخ الطلب</th><th>الحالة</th><th>إجراء</th></tr></thead>
+          <tbody>
+            <tr><td>متجر الأناقة</td><td><span class="chip chip-blue">تاجر</span></td><td><b>12,400 EGP</b></td><td>Banque Misr ···4521</td><td>اليوم 09:55</td><td><span class="chip chip-amber">انتظار</span></td><td><div style="display:flex;gap:5px"><button class="tb-btn tb-btn-teal" style="padding:4px 10px;font-size:11px" onclick="toast('تمت الموافقة — 12,400 EGP','success')">موافقة</button><button class="tb-btn" style="padding:4px 8px;font-size:11px;color:var(--danger)" onclick="toast('تم رفض الطلب','error')">رفض</button></div></td></tr>
+            <tr><td>خالد منصور</td><td><span class="chip chip-teal">سائق</span></td><td><b>4,200 EGP</b></td><td>CIB ···7834</td><td>أمس 18:00</td><td><span class="chip chip-amber">انتظار</span></td><td><div style="display:flex;gap:5px"><button class="tb-btn tb-btn-teal" style="padding:4px 10px;font-size:11px" onclick="toast('تمت الموافقة — 4,200 EGP','success')">موافقة</button><button class="tb-btn" style="padding:4px 8px;font-size:11px;color:var(--danger)">رفض</button></div></td></tr>
+            <tr><td>تك ستور</td><td><span class="chip chip-blue">تاجر</span></td><td><b>5,800 EGP</b></td><td>QNB ···2210</td><td>أمس 14:20</td><td><span class="chip chip-blue">معالجة</span></td><td><span class="chip chip-gray">قيد التنفيذ</span></td></tr>
+          </tbody>
+        </table></div>
+      </div>
+    </div>
+
+    <!-- ════ SYSTEM ════ -->
+    <div id="view-system" class="page-view" style="display:none">
+      <div class="g2">
+        <div class="card">
+          <div class="card-hd"><span class="card-title">حالة النظام</span><span class="chip chip-green">كل الخدمات تعمل</span></div>
+          <div style="display:flex;flex-direction:column;gap:10px;font-size:12.5px">
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--bdr)"><span><i class="ti ti-server" style="color:var(--blue2);margin-left:6px"></i>Spring Boot API</span><span class="chip chip-green">نشط · 99.9%</span></div>
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--bdr)"><span><i class="ti ti-database" style="color:var(--blue2);margin-left:6px"></i>PostgreSQL DB</span><span class="chip chip-green">نشط · 45ms</span></div>
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--bdr)"><span><i class="ti ti-bolt" style="color:var(--gold);margin-left:6px"></i>Redis Cache</span><span class="chip chip-green">نشط · 2ms</span></div>
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--bdr)"><span><i class="ti ti-world" style="color:var(--teal2);margin-left:6px"></i>Nginx</span><span class="chip chip-green">نشط</span></div>
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--bdr)"><span><i class="ti ti-message" style="color:var(--purple);margin-left:6px"></i>Twilio SMS</span><span class="chip chip-green">نشط</span></div>
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0"><span><i class="ti ti-credit-card" style="color:var(--navy);margin-left:6px"></i>Stripe Payments</span><span class="chip chip-green">نشط</span></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-hd"><span class="card-title">إعدادات عامة</span><button class="tb-btn tb-btn-prim" onclick="toast('تم حفظ الإعدادات','success')"><i class="ti ti-device-floppy"></i>حفظ</button></div>
+          <div style="display:flex;flex-direction:column;gap:12px">
+            <div class="form-field"><label class="form-label">اسم النظام</label><input class="form-input" value="توصيلة CMS v1.0"></div>
+            <div class="form-field"><label class="form-label">وضع الصيانة</label><select class="form-select"><option>مُعطَّل</option><option>مُفعَّل</option></select></div>
+            <div class="form-field"><label class="form-label">العملة الافتراضية</label><select class="form-select"><option>EGP — جنيه مصري</option><option>USD — دولار</option></select></div>
+            <div class="form-field"><label class="form-label">حد API اليومي (طلبات)</label><input class="form-input" value="10,000"></div>
+            <div class="form-field"><label class="form-label">منطقة زمنية</label><select class="form-select"><option>Africa/Cairo (UTC+3)</option></select></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- other views placeholder -->
+    <div id="view-tracking" class="page-view" style="display:none"><div class="card" style="margin-top:8px"><div class="map-ph" style="height:400px"><i class="ti ti-map"></i><span>خريطة التتبع المباشر — 143 سائق نشط</span><span style="font-size:11px">متاحة في الإصدار المرتبط بـ Google Maps API</span></div></div></div>
+    <div id="view-routes" class="page-view" style="display:none"><div class="hero-strip"><div class="hero-ico"><i class="ti ti-route"></i></div><div><h2>المسارات والتوزيع</h2><p>إدارة مسارات السائقين وخوارزميات التوزيع التلقائي</p></div></div><div class="card"><div class="empty"><i class="ti ti-route"></i><p>سيتم عرض المسارات النشطة هنا مع ربط الـ API</p></div></div></div>
+    <div id="view-warehouses" class="page-view" style="display:none"><div class="hero-strip"><div class="hero-ico"><i class="ti ti-building-warehouse"></i></div><div><h2>المستودعات</h2><p>6 مستودعات نشطة · Hub 01 القاهرة هو الأكبر</p></div></div><div class="card"><div class="empty"><i class="ti ti-building-warehouse"></i><p>إدارة المستودعات متاحة في بوابة Warehouse</p></div></div></div>
+    <div id="view-zones" class="page-view" style="display:none"><div class="hero-strip"><div class="hero-ico"><i class="ti ti-map"></i></div><div><h2>المناطق والتسعير</h2><p>18 منطقة جغرافية — تعديل الأسعار وقواعد التوزيع</p></div></div><div class="card"><div class="empty"><i class="ti ti-map-pin"></i><p>خريطة المناطق مع ربط Mapbox API</p></div></div></div>
+    <div id="view-invoices" class="page-view" style="display:none"><div class="hero-strip"><div class="hero-ico"><i class="ti ti-file-invoice"></i></div><div><h2>الفواتير</h2><p>5 فواتير تنتظر المراجعة</p></div></div><div class="card"><div class="empty"><i class="ti ti-file-invoice"></i><p>قائمة الفواتير والفواتير الإلكترونية</p></div></div></div>
+    <div id="view-settlements" class="page-view" style="display:none"><div class="hero-strip"><div class="hero-ico"><i class="ti ti-building-bank"></i></div><div><h2>التسويات البنكية</h2><p>دفعات التحويل والتسويات الجماعية</p></div></div><div class="card"><div class="empty"><i class="ti ti-building-bank"></i><p>سجل التسويات والدفعات البنكية</p></div></div></div>
+    <div id="view-reports" class="page-view" style="display:none"><div class="hero-strip"><div class="hero-ico"><i class="ti ti-chart-bar"></i></div><div><h2>التقارير</h2><p>تقارير شاملة على أداء العمليات والمالية</p></div></div><div class="card"><div class="empty"><i class="ti ti-chart-bar"></i><p>التقارير التفصيلية مع Grafana Integration</p></div></div></div>
+    <div id="view-users" class="page-view" style="display:none"><div class="hero-strip"><div class="hero-ico"><i class="ti ti-users"></i></div><div><h2>إدارة المستخدمين</h2><p>كل المستخدمين والصلاحيات عبر RBAC</p></div></div><div class="card"><div class="empty"><i class="ti ti-users"></i><p>قائمة المستخدمين وإدارة الأدوار والصلاحيات</p></div></div></div>
+    <div id="view-tenants" class="page-view" style="display:none"><div class="hero-strip"><div class="hero-ico"><i class="ti ti-building"></i></div><div><h2>التناتات (Multi-Tenancy)</h2><p>4 تناتات نشطة · 1 معلق</p></div></div><div class="card"><div class="empty"><i class="ti ti-building"></i><p>إدارة التناتات والإعدادات الخاصة بكل واحدة</p></div></div></div>
+    <div id="view-audit" class="page-view" style="display:none"><div class="hero-strip"><div class="hero-ico"><i class="ti ti-shield-check"></i></div><div><h2>سجل الأحداث الأمني</h2><p>سجل ثابت وغير قابل للحذف لكل الإجراءات الحساسة</p></div></div><div class="card"><div class="empty"><i class="ti ti-shield"></i><p>سجل الأحداث الأمنية وتغييرات النظام</p></div></div></div>
+
+  </div><!-- /content -->
+</div><!-- /main -->
+</div><!-- /app -->
+
+<!-- ════ NEW SHIPMENT MODAL ════ -->
+<div class="modal-overlay" id="modal-newship">
+  <div class="modal">
+    <div class="modal-hd"><span class="modal-title">إنشاء شحنة جديدة</span><button class="modal-close" onclick="closeModal('modal-newship')">✕</button></div>
+    <div class="form-row" style="margin-bottom:10px">
+      <div class="form-field"><label class="form-label">التاجر</label><select class="form-select"><option>متجر الأناقة</option><option>تك ستور</option><option>بوتيك ريم</option></select></div>
+      <div class="form-field"><label class="form-label">نوع الخدمة</label><select class="form-select"><option>24 ساعة</option><option>48 ساعة</option><option>Express</option></select></div>
+    </div>
+    <div class="form-row" style="margin-bottom:10px">
+      <div class="form-field"><label class="form-label">اسم المستلم</label><input class="form-input" placeholder="الاسم كاملًا"></div>
+      <div class="form-field"><label class="form-label">رقم الهاتف</label><input class="form-input" placeholder="01XXXXXXXXX"></div>
+    </div>
+    <div class="form-field" style="margin-bottom:10px"><label class="form-label">العنوان</label><input class="form-input" placeholder="الشارع، المبنى، المنطقة، المحافظة"></div>
+    <div class="form-row" style="margin-bottom:16px">
+      <div class="form-field"><label class="form-label">الوزن (كجم)</label><input class="form-input" type="number" placeholder="1.0"></div>
+      <div class="form-field"><label class="form-label">مبلغ COD (EGP)</label><input class="form-input" type="number" placeholder="0"></div>
+    </div>
+    <div style="display:flex;gap:10px">
+      <button class="btn-full btn-navy-full" onclick="closeModal('modal-newship');toast('تم إنشاء الشحنة TW-9907 بنجاح','success')"><i class="ti ti-plus"></i>إنشاء الشحنة</button>
+      <button class="btn-full btn-out" onclick="closeModal('modal-newship')">إلغاء</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOASTS -->
+<div class="toast-wrap" id="toasts"></div>
+
+<script>
+const titles={overview:'لوحة التحكم — نظرة عامة',shipments:'إدارة الشحنات',couriers:'السائقون',merchants:'التجار',wallets:'المحافظ والتسويات',system:'إعدادات النظام',tracking:'التتبع المباشر',routes:'المسارات',warehouses:'المستودعات',zones:'المناطق والتسعير',invoices:'الفواتير',settlements:'التسويات البنكية',reports:'التقارير',users:'المستخدمون',tenants:'التناتات',audit:'سجل الأحداث'};
+
+function showView(id,btn){
+  document.querySelectorAll('.page-view').forEach(v=>v.style.display='none');
+  document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));
+  const el=document.getElementById('view-'+id);
+  if(el){el.style.display='block';el.style.animation='none';requestAnimationFrame(()=>{el.style.animation=''});}
+  if(btn) btn.classList.add('active');
+  document.getElementById('tb-title').textContent=titles[id]||id;
+}
+function openModal(id){document.getElementById(id).classList.add('open');}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+document.querySelectorAll('.modal-overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('open');}));
+function toast(msg,type='info'){
+  const w=document.getElementById('toasts');
+  const t=document.createElement('div');
+  t.className=`toast toast-${type}`;
+  t.innerHTML=`<i class="ti ti-${type==='success'?'circle-check':type==='error'?'circle-x':'info-circle'}"></i>${msg}`;
+  w.appendChild(t);
+  setTimeout(()=>t.remove(),3000);
+}
+</script>
+</body>
+</html>
